@@ -1,0 +1,109 @@
+      * ----------------------------------------------------------------
+      *             ***********************************
+      *             A B S A  S A V I N G S  S Y S T E M
+      *             ***********************************
+      *
+      *       P R O D U C T    S P E C I F I C    D E P E N D A N T
+      *
+      *                         S V D E 2 5 9
+      *
+      *       TOTAL LENGTH =  119
+      *       KEY LENGTH   =    -
+      *
+      *       PARENT SEGMENT = SVDE251
+      * ----------------------------------------------------------------
+      *
+      **** START MONEY MARKET FUND DEFINITION ****
+      *
+       01  SVSE259-MNY-MRKT-FUND-RECORD.
+      *
+           02 SVSE259-REC-LENGTH        PIC S9(4)      COMP VALUE +88.
+      *                            RECORD LENGTH
+           02 SVSE259-MNY-MRKT-FUND-DETAIL.
+             04 SVSE259-CURR-DAY-MMF-BAL
+                                        PIC S9(15)V99  COMP-3.
+      *                            CURRENT DAY MONEY MARKET FUND BALANCE
+             04 SVSE259-YIELD-PREV-MNTH-AMT
+                                        PIC S9(11)V99   COMP-3.
+      *                            PREVIOUS MONTH YIELD EARNED.
+             04 SVSE259-YIELD-CURR-MNTH-AMT
+                                        PIC S9(11)V99   COMP-3.
+      *                            CURRENT MONTH YIELD EARNED.
+             04 SVSE259-ADMIN-CURR-MNTH-AMT
+                                        PIC S9(7)V99   COMP-3.
+      *                            TOTAL ADMINISTRATION FEES FOR THE CURRENT MON
+             04 SVSE259-ADMIN-PREV-MNTH-AMT
+                                        PIC S9(7)V99   COMP-3.
+      *                            TOTAL ADMINISTRATION FEES FOR THE PREVIOUS MO
+             04 SVSE259-CHRG-CURR-MNTH-AMT
+                                        PIC S9(7)V99   COMP-3.
+      *                            TOTAL TRANSACTION CHARGES FOR THE CURRENT MON
+             04 SVSE259-CHRG-PREV-MNTH-AMT
+                                        PIC S9(7)V99   COMP-3.
+      *                            TOTAL TRANSACTION CHARGES FOR THE PREVIOUS MO
+             04 SVSE259-VAT-PREV-MNTH-AMT
+                                        PIC S9(5)V99   COMP-3.
+      *                            TOTAL VAT FOR THE PREVIOUS MONTH
+             04 SVSE259-VAT-CURR-MNTH-AMT
+                                        PIC S9(5)V99   COMP-3.
+      *                            TOTAL VAT FOR THE CURRENT MONTH
+             04 SVSE259-CMSN-CURR-MNTH-AMT
+                                        PIC S9(5)V99   COMP-3.
+      *                            TOTAL COMMISSION FOR THE CURRENT MONTH
+             04 SVSE259-CMSN-PREV-MNTH-AMT
+                                        PIC S9(5)V99   COMP-3.
+      *                            TOTAL COMMISSION FOR THE PREVIOUS MONTH
+             04 SVSE259-BRKR-SRCE-CODE  PIC X.
+      *                            BROKER SOURCE CODE
+              88 SVSE259-SRCE-INTERNAL     VALUE 'I'.
+              88 SVSE259-SRCE-EXTERNAL     VALUE 'E'.
+              88 SVSE259-SRCE-INDEPENDANT  VALUE 'N'.
+              88 SVSE259-SRCE-BRANCH       VALUE 'B'.
+              88 SVSE259-SRCE-UNKNOWN      VALUE ' '.
+             04 SVSE259-BRKR-NBR        PIC X(12).
+      *                            BROKER NUMBER
+             04 SVSE259-WTI-PREV-MNTH-AMT
+                                        PIC S9(11)V99   COMP-3.
+      *                            PREVIOUS MONTH TAX WITHHELD
+             04 SVSE259-WTI-CURR-MNTH-AMT
+                                        PIC S9(11)V99   COMP-3.
+      *                            CURRENT MONTH TAX WITHHELD
+      *
+      ****  END OF MONEY MARKET DEFINITION ****
+      *
+      **** START TAX FREE SAVINGS DEFINITION ****
+       01  SVSE259-TAX-FREE-SAVE-RECORD REDEFINES
+           SVSE259-MNY-MRKT-FUND-RECORD.
+           02 FILLER                    PIC S9(4)      COMP.
+              88 SVSE259-TFS-REC-LENGTH VALUE +88.
+      *                            RECORD LENGTH
+           02 SVSE259-TAX-FREE-SAVE-DETAIL.
+             04 SVSE259-LFE-CONTR-AMOUNT-TFS
+                                        PIC S9(15)V99  COMP-3.
+      *                            LIFETIME CONTRIBUTION AMOUNT
+             04 SVSE259-ANN-CONTR-AMOUNT-TFS
+                                        PIC S9(11)V99   COMP-3.
+      *                            ANNUAL CONTRIBUTION AMOUNT
+NJ1607       04 SVSE259-PREV-LFE-CONTR-AMT-TFS
+                                        PIC S9(15)V99  COMP-3.
+      *                            PREVIOUS LIFETIME CONTRIBUTION AMOUNT
+             04 SVSE259-PREV-ANN-CONTR-AMT-TFS
+                                        PIC S9(11)V99  COMP-3.
+      *                            PREVIOUS ANNUAL CONTRIBUTION AMOUNT
+             04 SVSE259-WITHDRAWAL-AMOUNT
+                                        PIC S9(13)V99  COMP-3.
+NJ1607*                            TOTAL WITHDRAWALS AMOUNT
+             04 SVSE259-FILLER-TFS
+                                        PIC X(30).
+      *                            ADDITIONAL SPACE
+      **** END OF TAX FREE DEFINITION ****
+      *
+       01  SVSE259-SPARE-SPACE          PIC X(36).
+      *                            SPARE SPACE
+       01  SVSE259-VERSION.
+           02 FILLER                    PIC X(11) VALUE 'END-OF-PARM'.
+      *                            FILLER
+           02 SVSE259-VER-NBR           PIC 99    VALUE 0.
+      *                            VERSION NUMBER
+
+

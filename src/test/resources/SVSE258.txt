@@ -1,0 +1,119 @@
+      *Y2KC---------------------------------------------------------------
+      *Y2KC THIS COMPONENT HAS BEEN CERTIFIED AS YEAR 2000 COMPLIANT BY
+      *Y2KC    ABSV002                         26 MAR 1998  16.40.53
+      *Y2KC---------------------------------------------------------------
+      * ---------------------------------------------------------
+      *         A B S A  S A V I N G S  S Y S T E M
+      *         ***********************************
+      *         ********** N O T I C E ************
+      *         ***********************************
+      *
+      *          N O T I C E S   D E P E N D A N T
+      *
+      *                   S V D E 2 5 8
+      *
+      *      TOTAL LENGTH =  186
+      *      KEY LENGTH   =  9
+      *
+      *      PARENT SEGMENT = SVDE251
+      * ---------------------------------------------------------
+      *
+       01  SVSE258-NOTICE-RECORD.
+           02 SVSE258-REC-LENGTH        PIC S9(4)      COMP VALUE +195.
+      *                            RECORD LENGTH
+           02 SVSE258-NOTICE-KEY.
+             04 SVSE258-DUE-DATE        PIC S9(9)      COMP-3.
+      *                            DUE DATE
+             04 SVSE258-SEQ-NBR         PIC S9(7)      COMP-3.
+      *                            SEQUENCE NUMBER
+           02 SVSE258-NOTICE-DETAIL.
+             04 SVSE258-REQST-AMT       PIC S9(15)V99  COMP-3.
+      *                            REQUESTED NOTICE AMOUNT
+             04 SVSE258-ACTL-AMT        PIC S9(15)V99  COMP-3.
+      *                            ACTUAL NOTICE AMOUNT
+             04 SVSE258-FATE-OF-FUNDS-CODE
+                                        PIC S9(5)      COMP-3.
+      *                            FATE OF FUNDS
+             04 SVSE258-PNLT-AMT        PIC S9(15)V99  COMP-3.
+      *                            PENALTY AMOUNT
+             04 SVSE258-PNLT-PCT        PIC S999V9(4)  COMP-3.
+      *                            PENALTY PERCENTAGE
+             04 SVSE258-REQST-AVAIL-WD-AMT
+                                        PIC S9(15)V99  COMP-3.
+      *                            REQUESTED AVAILABLE FOR WITHDRAWAL
+             04 SVSE258-ORIG-ACTL-AVAIL-WD-AMT
+                                        PIC S9(15)V99  COMP-3.
+      *                            ORIGIONAL ACTUAL AVAILABLE FOR WITHDRAWAL
+             04 SVSE258-ACTL-AVAIL-WD-AMT
+                                        PIC S9(15)V99  COMP-3.
+      *                            ACTUAL AVAILABLE FOR WITHDRAWAL
+             04 SVSE258-ACTL-AVAIL-INSTR-AMT
+                                        PIC S9(15)V99  COMP-3.
+      *                            ACTUAL AVAILABLE FOR INSTRUCTIONS
+             04 SVSE258-NOTICE-STAT-CODE
+                                        PIC XXX.
+      *                            NOTICE STATUS CODE
+              88 SVSE258-CANCELLED      VALUE 'CAN'.
+              88 SVSE258-PENDING        VALUE 'PEN'.
+              88 SVSE258-NO-PAYMENT     VALUE 'NP '.
+              88 SVSE258-PAID           VALUE 'PD '.
+              88 SVSE258-INCLUDED-CLOSURE
+                                        VALUE 'INC'.
+             04 SVSE258-NOTICE-TYPE     PIC XXX.
+      *                            NOTICE TYPE
+              88 SVSE258-INT-NOTICE     VALUE 'INT'.
+              88 SVSE258-CAP-NOTICE     VALUE 'CAP'.
+              88 SVSE258-PNLT-CAP-NOTICE
+                                        VALUE 'PC '.
+MM0512        88 SVSE258-SYS-NOTICE     VALUE 'SYS'.
+             04 SVSE258-EARLY-WTHOUT-PNLT-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            EARLIEST WITHOUT PENALTY DATE
+             04 SVSE258-EARLY-WITH-PNLT-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            EARLIEST WITH PENALTY DATE
+             04 SVSE258-LATEST-DUE-DATE PIC S9(9)      COMP-3.
+      *                            LATEST DUE DATE
+             04 SVSE258-ER-WO-PNLT-DTE-SEQ-NBR
+                                        PIC 9.
+      *                            EARLIEST WITHOUT PENALTY DATE SEQUENCE NUMBER
+             04 SVSE258-ER-WT-PNLT-DTE-SEQ-NBR
+                                        PIC 9.
+      *                            EARLIEST WITH PENALTY DATE SEQUENCE NUMBER
+             04 SVSE258-LATEST-DUE-DTE-SEQ-NBR
+                                        PIC 9.
+      *                            LATEST DUE DATE SEQUENCE NUMBER
+             04 SVSE258-CAPT-DATE       PIC S9(9)      COMP-3.
+      *                            NOTICE CAPTURE DATE
+             04 SVSE258-GRACE-PER-EXPY-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            NOTICE GRACE PERIOD EXPIRED DATE
+             04 SVSE258-MAX-WD-NOTICE-NBR
+                                        PIC S999       COMP-3.
+      *                            MAXIMUM NUMBER WITHDRAWALS PER NOTICE
+             04 SVSE258-EXT-SRCE-CODE   PIC X.
+      *                            EXTERNAL SOURCE CODE
+              88 SVSE258-SRCE-SASWITCH  VALUE 'S'.
+              88 SVSE258-SRCE-MULTINET  VALUE 'M'.
+              88 SVSE258-SRCE-POS       VALUE 'P'.
+              88 SVSE258-SRCE-BANKTEL   VALUE 'B'.
+              88 SVSE258-SRCE-DEBIT-CARD
+                                        VALUE 'D'.
+              88 SVSE258-SRCE-COMPUBANK VALUE 'C'.
+AB0005        88 SVSE258-SRCE-TELEBANKING
+AB0005                                  VALUE 'T'.
+              88 SVSE258-SRCE-NONE      VALUE ' '.
+      *                            EPS INSTRUCTION NUMBER
+             04 SVSE258-TRANS-SITE-CODE PIC S9(7)      COMP-3.
+      *                            SITE CODE
+             04 SVSE258-SHORT-NOTICE-IND
+                                        PIC X.
+      *                            SHORT NOTICE INDICATOR (Y/N)
+             04 SVSE258-CALC-PNLT-AMT   PIC S9(15)V99  COMP-3.
+      *                            CALCULATED PENALTY AMOUNT
+             04 SVSE258-ACCT-NAME       PIC X(6).
+      *                            FILLER
+AI1703       04 SVSE258-UPF-PNLT-AMNT   PIC S9(15)V99  COMP-3.
+      *                UPFRONT INTEREST PENALTY AMOUNT
+
+

@@ -1,0 +1,42 @@
+      *Y2KC---------------------------------------------------------------'
+      *Y2KC THIS COMPONENT HAS BEEN CERTIFIED AS YEAR 2000 COMPLIANT BY   '
+      *Y2KC    ABSV002                         15 APR 1998  17.34.03      '
+      *Y2KC---------------------------------------------------------------'
+      * -------------------------------------------------------------
+      *            A B S A  S A V I N G S  S Y S T E M
+      *            ***********************************
+      *
+      * O V E R R I D D E N   C O N D I T I O N S   D E P E N D A N T
+      *
+      *                      S V D E 2 5 4
+      *
+      *      TOTAL LENGTH = 41
+      *      KEY LENGTH   =  6
+      *
+      *      PARENT SEGMENT = SVDE251
+      * -------------------------------------------------------------
+      *
+       01  SVSE254-OVERRIDE-COND-RECORD.
+           02 SVSE254-REC-LENGTH        PIC S9(4)      COMP VALUE +41.
+      *                            RECORD LENGTH
+           02 SVSE254-OVERRIDE-COND-KEY.
+             04 SVSE254-DEFAULT-IND     PIC X.
+      *                            DEFAULT INDICATOR
+             04 SVSE254-CATEG-CODE      PIC XX.
+      *                            BASE CATEGORY CODE
+             04 SVSE254-BASE-CODE       PIC XXX.
+      *                            BASE CODE
+           02 SVSE254-OVERRIDE-COND-DETAIL.
+             04 SVSE254-COND-NBR        PIC XXX.
+      *                            CONDITION NUMBER
+             04 SVSE254-COND-DATA       PIC X(30).
+      *                            CONDITION DATA
+       01  SVSE254-SPARE-SPACE          PIC X(25).
+      *                            SPARE SPACE
+       01  SVSE254-VERSION.
+           02 FILLER                    PIC X(11) VALUE 'END-OF-PARM'.
+      *                            FILLER
+           02 SVSE254-VER-NBR           PIC 99    VALUE 0.
+      *                            VERSION NUMBER
+
+

@@ -1,0 +1,833 @@
+      * ----------------------------------------------------------------
+      *            ***********************************
+      *            A B S A  S A V I N G S  S Y S T E M
+      *            ***********************************
+      *
+      *          M A S T E R   D A T A B A S E   R O O T
+      *
+      *                       S V D E 2 5 1
+      *
+      *       TOTAL LENGTH = 1100
+      *       KEY LENGTH   =   9
+      *
+      * DEPENDANT SEGMENT = SVDE252 - SEQUENTIAL DEPENDANT JOURNAL
+      * DEPENDANT SEGMENT = SVDE253 - UNAVAILABLE AMOUNTS
+      * DEPENDANT SEGMENT = SVDE254 - OVERRIDDEN CONDITIONS
+      * DEPENDANT SEGMENT = SVDE255 - NOBOOK TRANSACTIONS
+      * DEPENDANT SEGMENT = SVDE256 - SPECIAL DESIGNATION
+      * DEPENDANT SEGMENT = SVDE257 - DEPOSITS SPECIFIC
+      * DEPENDANT SEGMENT = SVDE258 - DEPOSITS NOTICES
+      * DEPENDANT SEGMENT = SVDE259 - MONEY MARKET
+      *
+      * THE TRANS-ACCUM-DET TABLE CONTAINS THE FOLLOWING TOTALS FOR
+      * THE ACCOUNT :
+      * TRANS-CNT (01) -> NO OF WITHDRAWALS TODAY
+      * TRANS-CNT (02) -> TOTAL NUMBER OF WITHDRAWALS EVER
+      * TRANS-CNT (03) -> NOT USED
+      * TRANS-CNT (04) -> NO OF DEPOSITS TODAY
+      * TRANS-CNT (05) -> NO OF WITHDRAWALS THIS MONTH
+      * TRANS-CNT (06) -> NOT USED
+      * TRANS-CNT (07) -> NO OF DEPOSITS THIS MONTH
+      * TRANS-CNT (08) -> NOT USED
+      * TRANS-CNT (09) -> NOT USED
+      * TRANS-CNT (10) -> NOT USED
+      *
+      * TRANS-TOT (01) -> TOTAL VALUE OF WITHDRAWALS TODAY
+      * TRANS-TOT (02) -> TOTAL VALUE OF PAYNET WITHDRWLS/PURCHS TODAY
+      * TRANS-TOT (03) -> TOTAL VALUE OF ATM WITHDRAWALS TODAY
+      * TRANS-TOT (04) -> TOTAL VALUE OF ATM CHEQUE WITHDRAWALD TODAY
+      * TRANS-TOT (05) -> TOTAL VALUE OF ATM TRANSFERS TODAY
+      * TRANS-TOT (06) -> TOTAL VALUE OF WITHDRAWALS THIS MONTH
+      * TRANS-TOT (07) -> TOTAL VALUE OF DEPOSITS TODAY
+      * TRANS-TOT (08) -> TOTAL VALUE OF CHEQUES CLEARED TODAY
+      * TRANS-TOT (09) -> NOT USED
+      * TRANS-TOT (10) -> NOT USED
+      *
+      *  NOTE: - ALL FIELDS UNDER THE 04 LEVEL WITH A COMMENT
+      *          '*     INTEREST RELATED FIELDS'
+      *          MAY ONLY BE UPDATED BY INTEREST/CHARGES SUBSYSTEM.
+      *        - ALL OTHER FIELDS ARE THE RESPONSIBILITY OF THE SAVINGS
+      *          SYSTEM
+      *        - EXCEPTIONS - (*VI) = INTEREST AND CHARGES SUB-SYSTEM
+      *                     - (*SV) = SAVINGS SYSTEM
+      * ----------------------------------------------------------------
+
+       01  SVSE251-ACCOUNT-RECORD.
+           02 SVSE251-REC-LENGTH        PIC S9(4)      COMP VALUE +1484.
+      *                            RECORD LENGTH
+           02 SVSE251-ACCOUNT-KEY.
+             04 SVSE251-ACCOUNT-NBR     PIC 9(17)      COMP-3.
+      *                            ACCOUNT NUMBER
+           02 SVSE251-ACCOUNT-DETAIL.
+             04 SVSE251-CLNT-CODE       PIC X(10).
+      *                           CLIENT CODE
+
+             04 SVSE251-STAT-CODE       PIC S999       COMP-3.
+      *                            ACCOUNT STATUS CODE
+              88 SVSE251-ALLOCATED      VALUE +1.
+AI1603        88 SVSE251-OPEN           VALUE +2 +10.
+              88 SVSE251-DORMANT        VALUE +3.
+              88 SVSE251-TRANSFERRED    VALUE +4.
+              88 SVSE251-SEMI-DORMANT   VALUE +5.
+AI1603        88 SVSE251-CLOSED         VALUE +6 +11.
+              88 SVSE251-MATURE-PENDING VALUE +7.
+              88 SVSE251-MATURE         VALUE +8.
+              88 SVSE251-CLOSE-PENDING  VALUE +9.
+AI1603        88 SVSE251-OPEN-PORTED    VALUE +10.
+AI1603        88 SVSE251-CLOSE-PORTED   VALUE +11.
+              88 SVSE251-OPEN-FOR-INTEREST
+                                        VALUE +2
+                                              +3
+                                              +5
+                                              +7
+                                              +8
+                                              +9
+AI1603                                        +10.
+              88 SVSE251-CLOSED-FOR-INTEREST
+                                        VALUE +4
+                                              +6
+AI1603                                        +11.
+             04 SVSE251-PRODUCT.
+               06 SVSE251-DIV-CODE      PIC XXX.
+      *                            DIVISION CODE
+               06 SVSE251-PROD-CODE     PIC X(6).
+      *                            PRODUCT CODE
+                88 SVSE251-MONEY-MARKET   VALUE '009001'.
+EMS6.4          88 SVSE251-EYMONEY-MARKET VALUE '009003'.
+MV1410          88 SVSE251-INVS-ADV       VALUE '009005' '009007'.
+NJ1412          88 SVSE251-TAX-FREE-SV    VALUE '009062'.
+                88 SVSE251-ALLPAY         VALUE '009070'.
+NJ1607          88 SVSE251-CLUB-ACCOUNT   VALUE '009072'.
+LW0406          88 SVSE251-MZANSI         VALUE '009076'.
+                88 SVSE251-ISLAMSAVE      VALUE '009080'.
+                88 SVSE251-FUTPLAN        VALUE '009205'.
+                88 SVSE251-ISLAMTARGET    VALUE '009207'.
+                88 SVSE251-GROUP-SAVINGS  VALUE '009209'.
+                88 SVSE251-ISLAM-YOUTH    VALUE '009035'.
+MV1510          88 SVSE251-TERM-DEPOSIT   VALUE '009500' '009501'.
+                88 SVSE251-UNITIZED       VALUE '009600'.
+NM0612          88 SVSE251-TRANSACT       VALUE '009082'.
+                88 SVSE251-RETAILER-PROD  VALUE '009088'.
+                88 SVSE251-FLEXI-PROD     VALUE '009308'.
+               06 SVSE251-VERSION-NBR   PIC S999       COMP-3.
+      *                            PRODUCT VERSION NUMBER
+             04 SVSE251-ACCT-SITE-CODE  PIC S9(7)      COMP-3.
+      *                            SITE CODE
+             04 SVSE251-ACCT-SITE-TYPE  PIC XXX.
+      *                            ACCOUNT SITE TYPE
+             04 SVSE251-CTRL-SITE-CODE  PIC S9(7)      COMP-3.
+      *                            CONTROLLING SITE CODE
+             04 SVSE251-CTRL-SITE-TYPE  PIC XXX.
+      *                            CONTROLLING SITE TYPE
+             04 SVSE251-CURR-EVENT-NBR  PIC S9(7)      COMP-3.
+      *                            CURRENT EVENT NUMBER
+             04 SVSE251-DYNAMIC-DATE    PIC S9(9)      COMP-3.
+      *                            DYNAMIC DATE
+             04 SVSE251-DYNAMIC-DAY-BAL PIC S9(15)V99  COMP-3.
+      *                            LATEST DYNAMIC DAY BALANCE
+             04 SVSE251-PREV-DYNAMIC-DAY-BAL
+                                        PIC S9(15)V99  COMP-3.
+      *                            PREVIOUS DYNAMIC DAY BALANCE
+             04 SVSE251-DORM-DATE       PIC S9(9)      COMP-3.
+      *                            DATE MADE DORMANT
+             04 SVSE251-CCP-EXPIRY-DATE PIC S9(9)      COMP-3.
+      *                            CCP HOLD EXPIRY DATE
+             04 SVSE251-OPEN-DATE       PIC S9(9)      COMP-3.
+      *                            ACCOUNT OPEN DATE
+             04 SVSE251-OPEN-REAS-CODE  PIC 99.
+      *                            OPEN REASON CODE
+             04 SVSE251-CMCMNT-DATE     PIC S9(9)      COMP-3.
+      *                            COMMENCEMENT DATE
+             04 SVSE251-BCKDTE-ALLOW-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            BACKDATING ALLOWED DATE
+             04 SVSE251-LAST-MAINT-PROC-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            DATE LAST MAINTENANCE TRANSACTION
+             04 SVSE251-DROP-DATE       PIC S9(9)      COMP-3.
+      *                            DATE DROPPED
+             04 SVSE251-CESSN-CODE      PIC 99.
+      *                            CESSION CODE
+              88 SVSE251-NO-CESSION     VALUE 0.
+              88 SVSE251-LIMITED-CESSION
+                                        VALUE 1.
+              88 SVSE251-FULL-CAP-ABSA  VALUE 2.
+              88 SVSE251-FULL-CAP-INT-ABSA
+                                        VALUE 3.
+              88 SVSE251-FULL-CAP-OTHER VALUE 4.
+              88 SVSE251-FULL-CAP-INT-OTHER
+                                        VALUE 5.
+              88 SVSE251-FULL-CESSN     VALUE 5.
+             04 SVSE251-CESSN-AMT       PIC S9(15)V99  COMP-3.
+      *                            CESSION AMOUNT
+             04 SVSE251-MLT-CARD-RSRV-AMT
+                                        PIC S9(15)V99  COMP-3.
+      *                            RESERVED MULTI CARD AMOUNT
+             04 SVSE251-CASH-FOCUS-IND  PIC X.
+      *                            CASHFOCUS ALLOWED INDICATOR
+             04 SVSE251-EPS-INSTR-CNT   PIC S9(5)      COMP-3.
+      *                            EPS INSTRUCTION COUNT
+             04 SVSE251-BOOK-BAL        PIC S9(15)V99  COMP-3.
+      *                            BOOK BALANCE
+             04 SVSE251-MED-ISSUE-NBR   PIC S999       COMP-3.
+      *                            BOOK VERSION
+             04 SVSE251-PREV-TXYR-UNP-CNT
+                                        PIC S999       COMP-3.
+      *                            UNPAID ITEMS PREV YEAR (*VI AND *SV)
+             04 SVSE251-CURR-TXYR-UNP-CNT
+                                        PIC S999       COMP-3.
+      *                            UNPAID ITEMS CURR YEAR (*VI AND *SV)
+             04 SVSE251-CONSLT-CODE     PIC S9(9)      COMP-3.
+      *                            CONSULTANT CODE
+             04 SVSE251-CLOSED-DETAIL.
+               06 SVSE251-CLOSE-DATE    PIC S9(9)      COMP-3.
+      *                            DATE CLOSED/TRANSFERRED
+               06 SVSE251-CLOSE-REAS-CODE
+                                        PIC 99.
+      *                            CLOSE REASON CODE
+             04 SVSE251-PREV-PRODUCT.
+               06 SVSE251-PREV-ACCT-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            LAST PREV INFO CHANGE DATE
+               06 SVSE251-PREV-SITE-CODE
+                                        PIC S9(7)      COMP-3.
+      *                            SITE CODE
+               06 SVSE251-PREV-DIV-CODE PIC XXX.
+      *                            DIVISION CODE
+               06 SVSE251-PREV-PROD-CODE
+                                        PIC X(6).
+      *                            PRODUCT CODE
+               06 SVSE251-PREV-VERSION-NBR
+                                        PIC S999       COMP-3.
+      *                            PRODUCT VERSION NUMBER
+             04 SVSE251-TRANS-ACCUM-DET.
+               06 SVSE251-TRANS-CNT     OCCURS 10 TIMES
+                                        PIC S999       COMP-3.
+      *                            NUMBER OF TRANSACTIONS
+               06 SVSE251-TRANS-TOT     OCCURS 10 TIMES
+                                        PIC S9(15)V99  COMP-3.
+      *                            VALUE OF TRANSACTIONS
+
+      *     INTEREST RELATED FIELDS MUST ONLY BE UPDATED BY
+      *     INTEREST/CHARGES SUBSYSTEM
+      *     ------------------------------------------------
+             04  SVSE251-INTEREST-CHARGES-AREA.
+      *          THERE IS AN ADDITIONAL INTEREST-CHARGES-AREA
+      *          FURTHER DOWN CALLED SVSE251-INTEREST-CHARGES-AREA2.
+
+               06 SVSE251-CURR-BAL      PIC S9(15)V99  COMP-3.
+      *                            CURRENT BALANCE
+               06 SVSE251-LAST-PROC-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            LAST PROCESSING DATE
+               06 SVSE251-LAST-PROC-TIME
+                                        PIC 9(9)       COMP-3.
+      *                            LAST PROCESS TIME
+               06 SVSE251-FIRST-FIN-PROC-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            PROC DATE OF FIRST FINANCIAL TRANSAC.
+               06 SVSE251-FIRST-FIN-PROC-TIME
+                                        PIC 9(9)       COMP-3.
+      *                            PROC TIME OF FIRST FINANCIAL TRANSAC.
+               06 SVSE251-FIRST-FIN-EFF-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            EFFECTIVE DATE OF FIRST FINANCIAL TRANS
+               06 SVSE251-TRAN-TOT      PIC S9(15)V99  COMP-3.
+      *                            TOTAL AMT. OF TRANS. PROCESSED AND
+      *                            EFFECTED ON LAST PROCESSING DATE
+               06 SVSE251-LAST-CLNT-PROC-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            PROC. DATE OF LAST CLIENT TRANSACTION
+               06 SVSE251-LAST-OFLN-PROC-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            PROC. DATE OF LAST OFLINE TRANSACTION
+               06 SVSE251-LAST-CR-PROC-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            PROC. DATE OF LAST CREDIT TRANSACTION
+               06 SVSE251-LAST-DR-PROC-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            PROC. DATE OF LAST DEBIT TRANSACTION
+               06 SVSE251-LAST-CR-AMT   PIC S9(15)V99  COMP-3.
+      *                            AMT OF LAST CREDIT TRANSACTION
+               06 SVSE251-LAST-DR-AMT   PIC S9(15)V99  COMP-3.
+      *                            AMT OF LAST DEBIT TRANSACTION
+               06 SVSE251-LAST-OVRDRW-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            LAST DATE OVERDRAWN
+               06 SVSE251-LAST-NOT-OVRDRW-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            LAST DATE NOT OVERDRAWN
+               06 SVSE251-PREV-MNTH-TNOVR-TOT
+                                        PIC S9(15)     COMP-3.
+      *                            TURNOVER PREV CALENDAR MONTH
+               06 SVSE251-CURR-MNTH-TNOVR-TOT
+                                        PIC S9(15)     COMP-3.
+      *                            TURNOVER CURR CALENDAR MONTH
+               06 SVSE251-PREV-TXYR-TNOVR-TOT
+                                        PIC S9(15)     COMP-3.
+      *                            TURNOVER PREV TAX YEAR
+               06 SVSE251-CURR-TXYR-TNOVR-TOT
+                                        PIC S9(15)     COMP-3.
+      *                            TURNOVER CURR TAX YEAR
+               06 SVSE251-LAST-INT-STMNT-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            LAST INTEREST STATEMENT DATE
+               06 SVSE251-PREV-INT-PER-END-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            LAST DAY OF PREV INT PERIOD
+               06 SVSE251-PROJ-HIST-BNDRY-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            LOW BOUNDARY DATE OF PROJECTION HIST.
+               06 SVSE251-INT-HIST-BNDRY-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            LOW BOUNDARY DATE OF INTEREST HIST.
+               06 SVSE251-BONUS-HIST-BNDRY-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            LOW BOUNDARY DATE OF BONUS HIST.
+               06 SVSE251-PNDNG-TRAN-FEE-AMT
+                                        PIC S9(7)V99   COMP-3.
+      *                            TRANSACTION CHARGE AMTS PENDING CAP
+      *                            (INCLUDING VAT PORTION)
+               06 SVSE251-PNDNG-CASH-FEE-AMT
+                                        PIC S9(7)V99   COMP-3.
+      *                            CASH DEPOSIT CHARGE AMTS PENDING CAP
+      *                            (INCLUDING VAT PORTION)
+               06 SVSE251-PNDNG-GOVT-LEVY-AMT
+                                        PIC S9(5)V99   COMP-3.
+      *                            GOVERNMENT LEVY AMTS PENDING CAP
+               06 SVSE251-PNDNG-VAT-TRAN-FEE-AMT
+                                        PIC S9(7)V99   COMP-3.
+      *                            VAT PORTION OF TR. CHARGE PENDING CAP
+               06 SVSE251-PNDNG-VAT-CASH-FEE-AMT
+                                        PIC S9(7)V99   COMP-3.
+      *                            VAT PORTION OF CASH DEP.CHARGE
+      *                            PENDING CAP
+               06 SVSE251-ACRU-CR-INT-AMT
+                                        PIC S9(11)V9(6)
+                                                       COMP-3.
+      *                            CREDIT INTEREST ACCRUED TO CURRENT
+      *                            INTEREST PERIOD
+               06 SVSE251-ACRU-DR-INT-AMT
+                                        PIC S9(11)V9(6)
+                                                       COMP-3.
+      *                            DEBIT INTEREST ACCRUED TO CURRENT
+      *                            INTEREST PERIOD
+               06 SVSE251-PNDNG-CR-INT-AMT
+                                        PIC S9(11)V99  COMP-3.
+      *                            CREDIT INTEREST PENDING CAP
+               06 SVSE251-PNDNG-DR-INT-AMT
+                                        PIC S9(11)V99  COMP-3.
+      *                            DEBIT INTEREST PENDING CAP
+               06 SVSE251-PNDNG-BONUS-INT-AMT
+                                        PIC S9(11)V99  COMP-3.
+      *                            BONUS PENDING CAP
+               06 SVSE251-NEXT-INT-CAP-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            NEXT INTEREST CAP DATE
+               06 SVSE251-NEXT-BONUS-CAP-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            NEXT BONUS CAP DATE
+               06 SVSE251-INT-MMB-PER-EXPY-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            EXPIRY DATE OF CURRENT INT MMB PERIOD
+               06 SVSE251-BONUS-MB-PER-EXPY-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            EXPIRY DATE OF CURRENT BNS MMB PERIOD
+               06 SVSE251-INT-CAP-PREV-TXYR-AMT
+                                        PIC S9(11)V99  COMP-3.
+      *                            CRD INTEREST/YLD/BONUS CAPPED DURING
+      *                            PREVIOUS TAX YEAR
+               06 SVSE251-INT-CAP-CURR-TXYR-AMT
+                                        PIC S9(11)V99  COMP-3.
+      *                            CRD INTEREST/YLD/BONUS CAPPED DURING
+      *                            CURRENT TAX YEAR
+               06 SVSE251-BAL-END-PREV-TXYR    PIC S9(15)V99  COMP-3.
+      *                            BALANCE AS KNOWN AT END OF
+      *                            PREVIOUS TAX YEAR
+               06 SVSE251-MMB-INT-METH-IND     PIC X.
+      *                         INDICATOR: INTEREST MMB METHOD APPLIES ?
+                88 SVSE251-MMB-INT-MIGHT-APPLY
+                                        VALUE 'Y'.
+                88 SVSE251-NO-MMB-INT-APPLIES
+                                        VALUE 'N'.
+               06 SVSE251-MMB-BONUS-METH-IND
+                                        PIC X.
+      *                            INDICATOR: BONUS MMB METHOD APPLIES ?
+                88 SVSE251-MMB-BONUS-MIGHT-APPLY
+                                        VALUE 'Y'.
+                88 SVSE251-NO-MMB-BONUS-APPLIES
+                                        VALUE 'N'.
+               06 SVSE251-INT-DROP-IND  PIC X.
+      *                            INTEREST DROP INDICATOR
+               06 SVSE251-PNDNG-BNF-FEE-AMT
+                                        PIC S9(5)V99  COMP-3.
+      *                            BENEFIT CHARGE AMTS PENDING CAP
+      *                            (INCLUDING VAT PORTION)
+               06 SVSE251-PNDNG-VAT-IN-BNF-FEE
+                                        PIC S9(5)V99  COMP-3.
+      *                            VAT PORTION IN BENEFIT CHARGE
+      *                            PENDING CAP
+               06 SVSE251-PNDNG-ADM-FEE-AMT
+                                        PIC S9(5)V99  COMP-3.
+      *                            ADMIN CHARGE AMTS PENDING CAP
+      *                            (INCLUDING VAT PORTION)
+               06 SVSE251-PNDNG-VAT-IN-ADM-FEE
+                                        PIC S9(5)V99  COMP-3.
+      *                            VAT PORTION IN ADMIN CHARGE
+      *                            PENDING CAP
+               06 SVSE251-BAL-STRT-PREV-TXYR
+                                        PIC S9(15)V99  COMP-3.
+      *                            BALANCE AS KNOWN AT START OF
+      *                            PREVIOUS TAX YEAR
+               06 SVSE251-CHRGS-HANDLE-RULE1-CNT
+                                        PIC S9(3)      COMP-3.
+      *
+               06 SVSE251-CHRGS-RULE2-CNT-DR
+                                        PIC S9(3)      COMP-3.
+      *
+               06 SVSE251-CHRGS-RULE2-CNT-CR
+                                        PIC S9(3)      COMP-3.
+      *
+               06 SVSE251-PNDNG-NWCRDFEE-AMT
+                                        PIC S9(5)V99  COMP-3.
+      *                            NEW CARD FEE AMTS PENDING CAP
+      *                            (INCLUDING VAT PORTION)
+               06 SVSE251-PNDNG-VAT-IN-NWCRDFEE
+                                        PIC S9(5)V99  COMP-3.
+      *                            VAT PORTION IN NEW CARD FEE
+      *                            PENDING CAP
+      *
+               06 SVSE251-PNDNG-PENALTFEE-AMT
+                                        PIC S9(5)V99  COMP-3.
+      *                            PENALTY FEE AMT PENDING CAP
+      *                            (INCLUDING VAT PORTION)
+               06 SVSE251-PNDNG-VAT-IN-PENALTFEE
+                                        PIC S9(5)V99  COMP-3.
+      *                            VAT PORTION IN SURCHARGE
+      *                            PENDING CAP
+               06 SVSE251-NWCRDFEE-TRANSACTS-CNT
+                                        PIC S9(5)      COMP-3.
+      *                            COUNTER OF NEW  CARD FEE TRANSACTS
+      *                            IMPOSED ON THE ACCOUNT TO DATE
+               06 SVSE251-CHRGS-R2-FREE-DEPS-CNT
+                                        PIC S9(3)      COMP-3.
+      *                            COUNTER FOR DETERMINING FREE DEPOSITS
+      *                            AS DEFINED BY RULE 2.
+               06 SVSE251-PNDNG-DECL-FEE-AMT
+                                        PIC S9(5)V99  COMP-3.
+      *                            DECLINED FEE   AMTS PENDING CAP
+      *                            (INCLUDING VAT PORTION)
+               06 SVSE251-PNDNG-VAT-IN-DECL-FEE
+                                        PIC S9(5)V99  COMP-3.
+      *                            VAT PORTION IN DECLINED CHARGE
+      *                            PENDING CAP
+               06 SVSE251-ATM-FREE-BAL-ENQS-CNT
+                                        PIC S9(3)     COMP-3.
+      *                            COUNTER TO DETERMINE FREE ENQUIRIES
+      *                            PERFORMED AT ABSA ATMS
+NJ1603         06 SVSE251-CP-METHOD     PIC X.
+                  88 SVSE251-CRP        VALUE 'H'.
+                  88 SVSE251-AIPS       VALUE 'A'.
+      *                            CREDIT PLAN METHOD
+               06 SVSE251-CP-RATE-CODE  PIC 999.
+NJ1607*                            FILLER FOR FUTURE USE
+
+             04 SVSE251-FIN-MONTH-TABLE OCCURS 13 TIMES.
+               06 SVSE251-CCYYMM-DATE   PIC S9(7)      COMP-3.
+      *                            TRANSACTION YEAR/MONTH
+               06 SVSE251-LAST-EVENT-NBR
+                                        OCCURS 3 TIMES
+                                        PIC S9(7)      COMP-3.
+      *                            LAST EVENT NUMBER
+             04 SVSE251-ACCOUNT-TYPE    PIC 9.
+      *                            ACCOUNT TYPE
+      *      IF ANYTHING CHANGES PLEASE UPDATE SVMP12D.
+              88 SVSE251-NORMAL         VALUE 0.
+              88 SVSE251-STAFF          VALUE 1.
+              88 SVSE251-STUDENT        VALUE 2.
+              88 SVSE251-UNQUAL-STUDENT VALUE 3.
+              88 SVSE251-PENSIONER      VALUE 4.
+              88 SVSE251-LIMITED-CHARGES
+                                        VALUE 1
+                                        2
+                                        3
+                                        4
+MV0503                                  7.
+              88 SVSE251-BUSINESS       VALUE 5.
+MV0503        88 SVSE251-PENSION-OFFER  VALUE 7.
+MV0503*                            NEW PENSIONER OFFERING
+              88 SVSE251-AFM-STOCK      VALUE 8.
+              88 SVSE251-AFM-STATUTORY  VALUE 9.
+             04 SVSE251-CLNT-PROD-CNT   PIC S999       COMP-3.
+      *                            CLIENT PRODUCT COUNT
+             04 SVSE251-CLNT-BIRTH-DATE PIC S9(9)      COMP-3.
+      *                            CLIENT BIRTH DATE
+             04 SVSE251-CLNT-LANG-CODE  PIC X.
+      *                            LANGUAGE CODE
+             04 SVSE251-AFP-REPORT-DET.
+               06 SVSE251-PRNT-STMNT-IND
+                                        PIC X.
+      *                            FORCE STATEMENT TONIGHT INDICATOR
+               06 SVSE251-OFLN-ENQ-SITE-CODE
+                                        PIC S9(7)      COMP-3.
+      *                            OFFLINE ENQUIRY SITE CODE
+               06 SVSE251-OFLN-ENQ-DATE PIC S9(9)      COMP-3.
+      *                            OFFLINE ENQUIRY DATE
+               06 SVSE251-MONITOR-ACT-SITE-CODE
+                                        PIC S9(7)      COMP-3.
+      *                            MONITOR ACTIVITY SITE CODE
+               06 SVSE251-WELCOME-LETTER-IND
+                                        PIC X.
+      *                            WELCOME LETTER PRINTED INDICATOR
+               06 SVSE251-LAST-STMNT-DATE
+                                        PIC S9(9)      COMP-3.
+      *                            LAST STATEMENT DATE
+               06 SVSE251-LAST-STMNT-NBR
+                                        PIC S9(5)      COMP-3.
+      *                            LAST STATEMENT NUMBER
+             04 SVSE251-PARM-OVRD-DET.
+               06 SVSE251-IC-OVRD-CNT   PIC S999       COMP-3.
+      *                            CHARGES OVERRIDE COUNTER
+               06 SVSE251-IN-OVRD-CNT   PIC S999       COMP-3.
+      *                            INTEREST OVERRIDE COUNTER
+               06 SVSE251-NT-OVRD-CNT   PIC S999       COMP-3.
+      *                            NOTICE OVERRIDE COUNTER
+               06 SVSE251-SA-OVRD-CNT   PIC S999       COMP-3.
+      *                            GENERAL OVERRIDE COUNTER
+               06 SVSE251-SC-OVRD-CNT   PIC S999       COMP-3.
+      *                            CREDITS OVERRIDE COUNTER
+               06 SVSE251-SD-OVRD-CNT   PIC S999       COMP-3.
+      *                            DEBITS OVERRIDE COUNTER
+               06 SVSE251-SE-OVRD-CNT   PIC S999       COMP-3.
+      *                            EXCEPTIONS OVERRIDE COUNTER
+               06 SVSE251-SG-OVRD-CNT   PIC S999       COMP-3.
+      *                            OPENING OVERRIDE COUNTER
+               06 SVSE251-SM-OVRD-CNT   PIC S999       COMP-3.
+      *                            MAINTENANCE OVERRIDE COUNTER
+               06 SVSE251-ST-OVRD-CNT   PIC S999       COMP-3.
+      *                            STATEMENTS OVERRIDE COUNTER
+             04 SVSE251-SBU-CODE        PIC 9(2).
+      *                            STRATEGIC BUSINESS UNIT CODE
+             04 SVSE251-MANAGEMENT-OF-ACCRUAL.
+               06 SVSE251-ACCR-CLSURE-IND
+                                          PIC X(1).
+      *                            CLOSES ACCS WITH ACCRUED AMT > BAL
+               06 SVSE251-MIN-BAL-CLSE-IND
+                                          PIC X(1).
+      *                            CLOSES ACCS WITH BAL < MIN-BAL
+             04 SVSE251-SECR-NBR        PIC S999       COMP-3.
+      *                            SECURITY NUMBER
+             04 SVSE251-ACCT-IND-DET.
+               06 SVSE251-CLNT-DECEAS-ESTATE-IND
+                                        PIC X.
+      *                            DECEASED ESTATE INDICATOR
+               06 SVSE251-CLNT-SPOUSE-DECEAS-IND
+                                        PIC X.
+      *                            SPOUSE DECEASED INDICATOR
+               06 SVSE251-CLNT-INS-EST-LIQD-IND
+                                        PIC X.
+      *                            INSOLVENT ESTATE/IN LIQUIDATION INDICATOR
+               06 SVSE251-CLNT-CURAT-JUDL-MG-IND
+                                        PIC X.
+      *                            CURATORSHIP/UNDER JUDICIAL MANAGEMENT INDICAT
+               06 SVSE251-COURT-ORDER-IND
+                                        PIC X.
+      *                            COURT ORDER INDICATOR
+               06 SVSE251-LEGAL-ACTION-IND
+                                        PIC X.
+      *                            LEGAL ACTION INDICATOR
+               06 SVSE251-BOOK-LOST-IND PIC X.
+      *                            LOST BOOK INDICATOR
+               06 SVSE251-SECR-MSG-IND  PIC X.
+      *                            SECURITY MESSAGE INDICATOR
+               06 SVSE251-BAD-DEBT-IND  PIC X.
+      *                            BAD DEBTS INDICATOR
+               06 SVSE251-POTEN-BAD-DEBT-IND
+                                        PIC X.
+      *                            POTENTIAL BAD DEBT INDICATOR
+               06 SVSE251-STOPPED-IND   PIC X.
+      *                            STOPPED ACCOUNT INDICATOR
+               06 SVSE251-FROZEN-IND    PIC X.
+      *                            FROZEN ACCOUNT INDICATOR
+               06 SVSE251-CLNT-POA-HELD-IND
+                                        PIC X.
+      *                            POWER OF ATTORNEY HELD INDICATOR
+               06 SVSE251-CLNT-MANDATE-HELD-IND
+                                        PIC X.
+      *                            SIGNING AUTHORITY HELD INDICATOR
+               06 SVSE251-SPCL-DESIG-IND
+                                        PIC X.
+      *                            SPECIAL DESIGNATION INDICATOR
+               06 SVSE251-MANDATE-REQ-IND
+                                        PIC X.
+      *                            SIGNING AUTHORITY REQUIRED INDICATOR
+               06 SVSE251-EXCL-FROM-ESTATE-IND
+                                        PIC X.
+      *                            EXCLUDED FROM ESTATE INDICATOR
+               06 SVSE251-CLNT-GET-POST-ADDR-IND
+                                        PIC X.
+      *                            GET POSTAL ADDRESS INDICATOR
+               06 SVSE251-CLNT-COURT-AUTH-IND
+                                        PIC X.
+      *                            COURT AUTHORITY HELD INDICATOR
+               06 SVSE251-CLNT-ID-REQ-IND
+                                        PIC X.
+      *                            ID REQUIRED INDICATOR
+               06 SVSE251-CLNT-GET-ACCT-ADDR-IND
+                                        PIC X.
+      *                            GET ACCOUNT ADDRESS INDICATOR
+               06 SVSE251-MONITOR-ACT-IND
+                                        PIC X.
+      *                            MONITOR ACTIVITY INDICATOR
+               06 SVSE251-OFLN-ENQ-IND  PIC X.
+      *                            OFFLINE ENQUIRY INDICATOR
+               06 SVSE251-CLNT-NONRES-IND
+                                        PIC X.
+      *                            NON RESIDENT ACCOUNT
+               06 SVSE251-BLOCK-IND     PIC X.
+      *                            BLOCKED ACCOUNT
+               06 SVSE251-EXCL-FROM-INSOLV-IND
+                                        PIC X.
+      *                            EXCLUDED FROM INSOLVENT INDICATOR
+               06 SVSE251-CCP-HOLD      PIC X.
+      *                            CCP HOLD INDICATOR
+LW0406         06 SVSE251-EXC-MAX-BAL-IND
+LW0406                                  PIC X.
+LW0406*                            EXCEED MAX BALANCE IND
+      *
+               06 SVSE251-FICA17-IND    PIC X.
+      *                  FICA EXEMPTION 17 IND
+MVSW62         06 SVSE251-LESS-MIN-BAL-IND   PIC X.
+      *                  IF BAL < MIN BAL DURING A MONTH INDICATOR
+             04 SVSE251-ACCT-IND-R REDEFINES SVSE251-ACCT-IND-DET.
+               06 SVSE251-ACCOUNT-IND   OCCURS 30 TIMES
+                                        PIC X.
+      *                            ACCOUNT HOLD INDICATOR
+MV1407       04 SVSE251-RESTRIC-HOLD    PIC X.
+      *                            DIGITAL RESTRICTIVE HOLD
+MVSW62       04 FILLER                  PIC X(06).
+
+
+             04 SVSE251-RSRV-INT-XFER-AMT
+                                        PIC S9(15)V99  COMP-3.
+      *                            INTEREST RESERVED FOR TRANSFER
+             04 SVSE251-RSRV-INT-XFER-ADJ-AMT
+                                        PIC S9(15)V99  COMP-3.
+      *                            INTEREST ADJUSTMENT RESERVED FOR TRANSFER
+             04 SVSE251-INT-INSTR-CNT   PIC S999       COMP-3.
+      *                            INTEREST INSTRUCTION COUNT
+             04 SVSE251-TRIAD-AREA.
+      *
+               06 SVSE251-LAST-RD-DATE        PIC S9(9)    COMP-3.
+      *                            DATE OF LAST RD EVENT
+               06 SVSE251-LAST-RD-AMT         PIC S9(9)V99 COMP-3.
+      *                            AMOUNT OF LAST RD EVENT
+               06 SVSE251-MTD-RD-CNT          PIC S9(3)    COMP-3.
+      *                            NUMBER OF RD'S MONTH TO DATE
+               06 SVSE251-PRVMTH-RD-CNT       PIC S9(3)    COMP-3.
+      *                            NUMBER OF RD'S PREV MONTH
+               06 SVSE251-MTD-INC-RTNS-CNT    PIC S9(3)    COMP-3.
+      *                            NUMBER OF INCOMING RTNS MONTH TO DATE
+               06 SVSE251-PRVMTH-INC-RTNS-CNT PIC S9(3)    COMP-3.
+      *                            NUMBER OF INCOMING RTNS PREV MONTH
+               06 SVSE251-MTD-INC-RTNS-AMT    PIC S9(9)V99 COMP-3.
+      *                            VALUE OF INCOMING RTNS MONTH TO DATE
+               06 SVSE251-PRVMTH-INC-RTNS-AMT PIC S9(9)V99 COMP-3.
+      *                            VALUE OF INCOMING RTNS PREV MONTH
+               06 SVSE251-AVAIL-UNCL-IND      PIC X.
+      *                            AVAILABLE UNLCLEAREDS INDICATOR
+                   88 SVSE251-USE-TRIAD-AVAIL-UNCL VALUE 'T'.
+                   88 SVSE251-USE-SAVDB-AVAIL-UNCL VALUE 'S'.
+      *
+               06 SVSE251-TR-CUST-DATE-LAST-CR  PIC S9(9)   COMP-3.
+      *                           TRIAD DATE OF LAST CREDIT TRANSACTION
+               06 SVSE251-TR-CUST-DATE-LAST-DR  PIC S9(9)   COMP-3.
+      *                           TRIAD DATE OF LAST DEBIT  TRANSACTION
+PK1111         06 SVSE251-PRVMTH-RD-AMT       PIC S9(9)V99 COMP-3.
+      *
+               06 FILLER                      PIC X(05).
+             04 SVSE251-GROUP-SCHEME          PIC X(6).
+             04 SVSE251-GROUP-SCHEME-N REDEFINES SVSE251-GROUP-SCHEME
+                                              PIC 9(6).
+      *                            GROUP SCHEME CODE
+             04 SVSE251-ARMS-AREA.
+      *                            FIELDS REQUIRED BY ARMS/OCS
+                06 SVSE251-ARMS-IND           PIC X.
+      *                            ARMS LINK INDICATOR - Y/N
+                06 SVSE251-ARMS-ACTION        PIC 99.
+      *                            OCS ACTION INDICATOR
+                   88 SVSE251-ARMS-ADD        VALUE 01.
+                   88 SVSE251-ARMS-UPDATE     VALUE 03.
+      *
+                06 SVSE251-ARMS-ACTIVATE-IND  PIC X.
+      *                            OCS ACTIVATION INDICATOR
+                   88 SVSE251-ARMS-ACTIVATE   VALUE 'A'.
+                   88 SVSE251-ARMS-INACTIVATE VALUE 'I'.
+      *
+               06 SVSE251-ARMS-ACTIVATE-CNT   PIC S9(3)    COMP-3.
+      *                            NUMBER OF TIMES ACTIVATED IN ARMS
+             04 SVSE251-SECURE-PAYMENT-IND    PIC 9        COMP-3.
+      *                            SECURE PAYMENT STATUS INDICATOR
+                88 SVSE251-NO-MICROLN-ACC     VALUE  0.
+                88 SVSE251-MICROLN-OUTST-PMTS VALUE  1.
+                88 SVSE251-MICROLN-NO-OUTST   VALUE  2.
+                88 SVSE251-MICROLN-PASSTHRU   VALUE  3.
+                88 SVSE251-MICROLN-CLOSED     VALUE  4.
+      *
+             04 SVSE251-SECURE-IND-DATE       PIC S9(9)    COMP-3.
+      *                           DATE OF LAST IND CHANGE
+             04 SVSE251-REMOTE-OPEN-IND       PIC X.
+                88 SVSE251-REMOTE-OPEN        VALUE 'Y'.
+                88 SVSE251-NORMAL-OPEN        VALUE 'N'.
+      *                           REMOTE OPENING INDICATOR
+             04 SVSE251-DOMESTIC-PACKAGE-IND   PIC X(2).
+      *                        DOMESTIC WORKERS PACKAGE INDICATOR
+      *                        OR HOME EMPLOYEE PLAN INDICATOR
+             04 SVSE251-RECENT-WDR-TABLE.
+               06 SVSE251-RECENT-WDR     OCCURS 3 TIMES.
+      *                      TABLE OF LAST 3 CUSTOMER WITHDRAWALS
+                  08 SVSE251-RECENT-WDR-DATE   PIC S9(9)      COMP-3.
+      *                        DATE OF LAST WITHDRAWAL TRANSACTION
+                  08 SVSE251-RECENT-WDR-AMT    PIC S9(15)V99  COMP-3.
+      *                        AMOUNT OF LAST WITHDRAWAL TRANSACTION
+
+             04 SVSE251-ACCOUNT-REF           PIC X(45).
+      *
+             04 SVSE251-BRKR-INFO REDEFINES SVSE251-ACCOUNT-REF.
+               05 SVSE251-BRKR-SRCE-CODE      PIC X.
+               05 SVSE251-BRKR-NBR            PIC X(12).
+               05 FILLER                      PIC X(32).
+
+      *     INTEREST RELATED FIELDS MUST ONLY BE UPDATED BY
+      *     INTEREST/CHARGES SUBSYSTEM
+      *     ------------------------------------------------
+             04  SVSE251-INTEREST-CHARGES-AREA2.
+
+               06 SVSE251-PNDNG-RTC-FEE-AMT
+                                        PIC S9(5)V99  COMP-3.
+      *               REAL TIME CLEARING FEE AMTS PENDING CAP
+      *                            (INCLUDING VAT PORTION)
+               06 SVSE251-PNDNG-VAT-IN-RTC-FEE
+                                        PIC S9(5)V99  COMP-3.
+      *               VAT PORTION IN REAL TIME CLEARING FEE
+      *                            PENDING CAP
+MVSW61         06 SVSE251-PROFIT-PREV-TXYR-AMT
+                                        PIC S9(11)V99  COMP-3.
+      *                            PROFIT SHARE PAYED DURING PREVIOUS
+      *                             TAX YEAR
+MVSW61         06 SVSE251-PROFIT-CURR-TXYR-AMT
+                                        PIC S9(11)V99  COMP-3.
+      *                            PROFIT SHARE PAYED DURING CURRENT
+      *                             TAX YEAR
+MV1607         06 SVSE251-ACRU-WTI-AMT
+                                        PIC S9(7)V9(6) COMP-3.
+      *                         ACCRUED WTI AMOUNT
+               06 SVSE251-PNDNG-VAT-IN-3RD-FEE
+                                        PIC S9(3)V99  COMP-3.
+      *               VAT PORTION IN 3RD FEE
+      *                            PENDING CAP
+               06 SVSE251-PNDNG-4TH-FEE-AMT
+                                        PIC S9(5)V99  COMP-3.
+      *                         4TH FEE AMTS PENDING CAP
+      *                            (INCLUDING VAT PORTION)
+               06 SVSE251-PNDNG-VAT-IN-4TH-FEE
+                                        PIC S9(5)V99  COMP-3.
+      *               VAT PORTION IN 4TH FEE
+      *                            PENDING CAP
+MDSW71*
+MD             06 SVSE251-ATM-DEPS-CNT
+MD                                      PIC S9(3)     COMP-3.
+MD    *                            COUNTER TO DETERMINE FREE DEPOSITS
+MD    *                            PERFORMED AT ABSA ATMS
+MD             06 SVSE251-ATM-WTHD-CNT
+MD                                      PIC S9(3) COMP-3.
+MD    *                            COUNTER TO DETERMINE FREE WITHDRAWALS
+MD    *                            PERFORMED AT ABSA ATMS
+MD             06 SVSE251-ATM-MINI-STMNT-CNT
+MD                                      PIC S9(3) COMP-3.
+MD    *              COUNTER TO DETERMINE FREE MINI STATEMENTS ENQUIRIES
+MD    *                        PERFORMED AT ABSA ATMS
+MD             06 SVSE251-ATM-INTR-ACCS-CNT
+MD                                      PIC S9(3) COMP-3.
+MD    *          COUNTER TO DETERMINE FREE INTER ACCOUNT DEBIT TRANSFERS
+MD    *                            PERFORMED AT ABSA ATMS
+MD             06 SVSE251-UNPAID-DEBITS-CNT
+MD                                      PIC S9(3) COMP-3.
+MD    *                               COUNTER TO DETERMINE UNPAID DEBITS
+MDSW71*
+               06 SVSE251-FTR-COUNTERS  PIC X(03).
+      *                            COUNTERS
+MVSW96       04  SVSE251-ARMS-RISK-TYPE  PIC X(3).
+      *                            ARMS/OCS RISK TYPE.
+             04  SVSE251-FICA17-DAILY-DR-TOT
+                                        PIC S9(15)V99  COMP-3.
+             04  SVSE251-FICA17-MNTHL-DR-TOT
+                                        PIC S9(15)V99  COMP-3.
+             04  SVSE251-TRANS-TOT2    OCCURS 4  TIMES
+                                        PIC S9(15)V99  COMP-3.
+      *                            VALUE OF TRANSACTIONS
+XM1206       04 SVSE251-SEKULA2-PROD-IND PIC 9(2).
+XM1206*                            GRANT TYPE INDICATOR
+MDSW73       04 SVSE251-FCT-INDICATOR   PIC X(01).
+      *                            FULL CREDIT TRACKING INDICATOR
+      **** INDICATORS TO KEEP THE UNPAIDS FOR EACH MONTH
+      ****  THIS IS FOR THE NEW TIERED CHARGES (SWR08.200)
+MVSW82       04 SVSE251-MNTHLY-UNPAID-CNT   OCCURS 12 TIMES
+                                           PIC S999    COMP-3.
+      *                            UNPAID COUNTER PER ROLLING MONTH
+      *
+MVSW96       04 SVSE251-ATM-LOAN-IND    PIC X.
+      *                            ATM LOAN INDICATOR.
+      *
+ML1007       04 SVSE251-PREMTH-AGGBAL-CALC-IND PIC X.
+                88 SVSE251-PREMTH-AGGBAL-NOT-CALC VALUE 'N'.
+      *                            PREVIOUS MONTH AGGREGATE BALANCES
+      *                            NOT CALCULATED
+                88 SVSE251-PREMTH-AGGBAL-CALCTED  VALUE 'C'.
+      *                            PREVIOUS MONTH AGGREGATE BALANCES
+      *                            CALCULATED
+                88 SVSE251-PREMTH-AGGBAL-TORECALC   VALUE 'R'.
+      *                            PREVIOUS MONTH AGGREGATE BALANCES
+      *                            RE-CALCULATION REQUIRED
+      *
+MD1203       04 SVSE251-DORM-CLS-LETTER-IND
+                                        PIC X.
+      *                            DORMANT LETTER PRINTED INDICATOR
+NJ1607       04 SVSE251-DB-MONTHLY-TRNOV  PIC S9(13)V99.
+  |   *                            DEBIT MONTHLY TURNOVER
+  |          04 SVSE251-CR-MONTHLY-TRNOV  PIC S9(13)V99.
+  |   *                            CREDIT MONTHLY TURNOVER
+  |          04 SVSE251-CRP-SCHEME-CODE   PIC X(10).
+  |   *                            HMS CREDIT RATE SCHEME CODE
+  |          04 SVSE251-OPEN-CHANNEL      PIC X(05).
+  |   *                            ACCOUNT OPENING CHANNEL
+MV1607       04 SVSE251-WTI-PREV-TXYR-AMT
+  |                                       PIC S9(11)V99  COMP-3.
+  |   *                           TAX WITHHELD PREVIOUS TAX YEAR
+  |          04 SVSE251-WTI-CURR-TXYR-AMT
+MV1607                                    PIC S9(11)V99  COMP-3.
+  |   *                           TAX WITHHELD CURRENT TAX YEAR
+MV1607       04 SVSE251-WTI-ACR-PREV-TXYR
+  |                                       PIC S9(11)V99  COMP-3.
+  |   *                           TAX WITHHELD ACCRUED FOR
+  |   *                                        PREVIOUS TAX YEAR
+  |          04 SVSE251-WTI-ACR-CURR-TXYR
+MV1607                                    PIC S9(11)V99  COMP-3.
+  |   *                           TAX WITHHELD ACCRUED FOR
+  |   *                                        CURRENT TAX YEAR
+MV1607       04 SVSE251-WTI-COUNTRY       PIC X(04).
+      *                           WITHHOLDING OF TAX COUNTRY
+MV1703       04 SVSE251-SUB-ACCT-BAL      PIC S9(15)V99  COMP-3.
+      *                            SUB ACCOUNT BALANCE
+MV1703       04 SVSE251-DM9-IND           PIC X.
+      *                            DM9 INDICATOR
+             04 FILLER                    PIC X(159).
+NJ1607*                            FOR ANY FUTURE USE
+      *
+       01  SVSE251-VERSION.
+           02 FILLER                    PIC X(11) VALUE 'END-OF-PARM'.
+      *                            FILLER
+           02 SVSE251-VER-NBR           PIC 99    VALUE 0.
+      *                            VERSION NUMBER
+
+
