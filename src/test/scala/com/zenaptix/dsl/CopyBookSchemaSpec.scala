@@ -164,12 +164,11 @@ class CopyBookSchemaSpec extends WordSpec {
     }
 
     "traverse the statements of an AST " in {
-      //      roots.foreach({ root =>
-      //        root.traverseStatements.map({ statement =>
-      //          statement.name
-      //        })
-      //
-      //      })
+      roots.foreach({ root =>
+        root.traverseStatements.map({ statement =>
+          statement.name
+        })
+      })
     }
 
     "camelCase a variable name and" in {
@@ -238,7 +237,6 @@ class CopyBookSchemaSpec extends WordSpec {
 
       genRec.put("svse258NoticeKey", genRec1)
 
-
       val genRec2 = new GenericData.Record(parsed.getField("svse258NoticeDetail").schema())
       println(genRec2.getSchema)
       println(genRec2.getSchema.getFields)
@@ -264,8 +262,6 @@ class CopyBookSchemaSpec extends WordSpec {
       genRec2.put("svse258MaxWdNoticeNbr", 3L)
       genRec2.put("svse258ExtSrceCode", "laaitie")
 
-
-
       genRec2.put("svse258TransSiteCode", 3L)
       genRec2.put("svse258ShortNoticeInd", "afadf")
       genRec2.put("svse258CalcPnltAmt", 2344.435435)
@@ -280,8 +276,6 @@ class CopyBookSchemaSpec extends WordSpec {
       dataFileWriter.append(genRec)
       dataFileWriter.close()
     }
-
-
 
     "deserialize a txt file back to generic Record and create instance of case class" in {
       import com.zenaptix.test._

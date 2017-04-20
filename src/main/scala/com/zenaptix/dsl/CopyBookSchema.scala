@@ -757,6 +757,28 @@ object Files {
     vec
   }
 
+  def wordAlign(f: BitVector, wordSize: Int, pos: Position): BitVector = {
+    require(f.size < wordSize)
+    pos match {
+      case Left => f.padLeft(wordSize - f.size)
+      case Right => f.padRight(wordSize - f.size)
+    }
+  }
+
+  def getCodec(compac: Option[Int]): Codec[Int] = {
+    compac match {
+      case Some(x) if x == 1 || x == 4 => {
+        //normal binary decoding
+        uint(1)
+      }
+      case None => uint(1)
+      case _ => {
+        //bcd encoding
+        uint4
+      }
+    }
+  }
+
   /**
    *
    * @param f
@@ -784,20 +806,16 @@ object Files {
             //          println("Statement : " + y.camelCaseVar)
 
             val value = y.dataType match {
-              case a: AlphaNumeric => "3A" //todo: Here the hardcoded values need to be fetch from flat file
+              case a: AlphaNumeric => { //todo: Here the hardcoded values need to be fetch from flat file, text encoding will determine actual value. 
+                "3A"
+                //                a.wordAlligned match {
+                //                  case Some(Left) => wordAlign(a)
+                //                }
+              }
+
               case d: Decimal => {
                 println(y.dataType)
-                val codec = d.compact match {
-                  case Some(x) if x == 1 || x == 4 => {
-                    //normal binary decoding
-                    uint(1)
-                  }
-                  case None => uint(1)
-                  case _ => {
-                    //bcd encoding
-                    uint4
-                  }
-                }
+                val codec = getCodec(d.compact)
                 val bitCount: Long = d.scale match { //bitCount for the number of digits
                   case a if a >= 1 && a <= 4 && !codec.equals(uint4) => {
                     2 * 8
@@ -833,7 +851,7 @@ object Files {
                   }
                   case _ => bits.toByteArray
                 }
-//                println("padded : " + padded.mkString("|"))
+                //                println("padded : " + padded.mkString("|"))
                 val value = padded.map(byte => {
                   byte.toInt
                 })
@@ -888,7 +906,7 @@ object Files {
                   }
                   case _ => bits.toByteArray
                 }
-//                println("padded : " + padded.mkString("|"))
+                //                println("padded : " + padded.mkString("|"))
                 val value = padded.map(byte => {
                   byte.toInt
                 })
