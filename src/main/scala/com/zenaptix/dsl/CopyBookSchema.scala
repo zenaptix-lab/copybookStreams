@@ -758,10 +758,11 @@ object Files {
   }
 
   def wordAlign(f: BitVector, wordSize: Int, pos: Position): BitVector = {
-    require(f.size < wordSize)
+    require(f.size <= wordSize)
     pos match {
-      case Left => f.padLeft(wordSize - f.size)
-      case Right => f.padRight(wordSize - f.size)
+      case Left if (f.size != wordSize) => f.padLeft(wordSize - f.size)
+      case Right if (f.size != wordSize) => f.padRight(wordSize - f.size)
+      case _ => f
     }
   }
 
@@ -779,6 +780,36 @@ object Files {
     }
   }
 
+  def getBitCount(codec:Codec[Int],scale:Int,precision:Int=0) = {
+    scale match { //bitCount for the number of digits
+      case a if a >= 1 && a <= 4 && !codec.equals(uint4) => {
+        2 * 8
+      }
+      case b if b >= 5 && b <= 9 && !codec.equals(uint4) => {
+        4 * 8
+      }
+      case c if c > 0 && codec.equals(uint4) => {
+        (c + precision) * 4
+      }
+      case _ => {
+        println("NO MATCH")
+        8 * 8
+      }
+    }
+  }
+
+  def decode(codec:Codec[Int],range:Long, bits:BitVector,wordAllign:Option[Position] = Some(Right)): Array[Byte] = codec match {
+    case a if a.equals(uint4) => {
+      val b = for (x <- 0 until range.toInt) yield {
+        //                      println("decode x : " + x)
+        //                      println("bits.slice : " + bits.slice(x * 4, (x * 4) + 4))
+        val bts = wordAlign(bits.slice(x * 4, (x * 4) + 4),4,Right)
+        Codec.decode(bts)(codec).require.value.toByte
+      }
+      b.toArray
+    }
+    case _ => bits.toByteArray
+  }
   /**
    *
    * @param f
@@ -804,60 +835,45 @@ object Files {
           }
           case y: Statement => {
             //          println("Statement : " + y.camelCaseVar)
-
             val value = y.dataType match {
-              case a: AlphaNumeric => { //todo: Here the hardcoded values need to be fetch from flat file, text encoding will determine actual value. 
-                "3A"
-                //                a.wordAlligned match {
-                //                  case Some(Left) => wordAlign(a)
-                //                }
+              case a: AlphaNumeric => { //todo: Here the hardcoded values need to be fetch from flat file, text encoding will determine actual value.
+                val codec = uint8
+                val bitCount = a.length * 8
+                val bits = f.slice(fileIdx,fileIdx+bitCount)
+                val range = codec match {
+                  case a if a.equals(uint8) => bits.size / 8
+                  case _ => bits.size / 8
+                }
+                val padded: Array[Byte] = decode(codec,range,bits)
+                val ans = padded.map(byte => {
+                  byte.toInt
+                })
+                fileIdx = fileIdx + bitCount.toInt
+                println("value : " + ans.mkString("-"))
+                ans
+//                "3A"
               }
-
               case d: Decimal => {
                 println(y.dataType)
                 val codec = getCodec(d.compact)
-                val bitCount: Long = d.scale match { //bitCount for the number of digits
-                  case a if a >= 1 && a <= 4 && !codec.equals(uint4) => {
-                    2 * 8
-                  }
-                  case b if b >= 5 && b <= 9 && !codec.equals(uint4) => {
-                    4 * 8
-                  }
-                  case c if c > 0 && codec.equals(uint4) => {
-                    (c + d.precision) * 4
-                  }
-                  case _ => {
-                    println("NO MATCH")
-                    8 * 8
-                  }
-                }
+                val bitCount: Long = getBitCount(codec,d.scale,d.precision)
                 //                println("bitCount : " + bitCount)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
                 //                println("bits : " + bits.toBin)
                 //                println("bits.length : " + bits.toBin.length)
                 val range = codec match {
-                  case a if codec.equals(uint4) => bits.size / 4
+                  case a if a.equals(uint4) => bits.size / 4
                   case _ => bits.size / 8
                 }
                 //                println("range : " + range)
-                val padded: Array[Byte] = codec match {
-                  case a if a.equals(uint4) => {
-                    val b = for (x <- 0 until range.toInt) yield {
-                      //                      println("decode x : " + x)
-                      //                      println("bits.slice : " + bits.slice(x * 4, (x * 4) + 4))
-                      Codec.decode(bits.slice(x * 4, (x * 4) + 4))(codec).require.value.toByte
-                    }
-                    b.toArray
-                  }
-                  case _ => bits.toByteArray
-                }
+                val padded: Array[Byte] = decode(codec,range,bits)
                 //                println("padded : " + padded.mkString("|"))
-                val value = padded.map(byte => {
+                val ans = padded.map(byte => {
                   byte.toInt
                 })
                 fileIdx = fileIdx + bitCount.toInt
-                println("value : " + value.mkString("-"))
-                value
+                println("value : " + ans.mkString("-"))
+                ans
               }
               case i: Integer => {
                 println(y.dataType)
@@ -872,21 +888,7 @@ object Files {
                     uint4
                   }
                 }
-                val bitCount: Long = i.scale match { //bitCount for the number of digits
-                  case a if a >= 1 && a <= 4 && !codec.equals(uint4) => {
-                    2 * 8
-                  }
-                  case b if b >= 5 && b <= 9 && !codec.equals(uint4) => {
-                    4 * 8
-                  }
-                  case c if c > 0 && codec.equals(uint4) => {
-                    c * 4
-                  }
-                  case _ => {
-                    println("NO MATCH")
-                    8 * 8
-                  }
-                }
+                val bitCount: Long = getBitCount(codec,i.scale)
                 //                println("bitCount : " + bitCount)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
                 //                println("bits : " + bits.toBin)
@@ -896,23 +898,14 @@ object Files {
                   case _ => bits.size / 8
                 }
                 //                println("range : " + range)
-                val padded: Array[Byte] = codec match {
-                  case a if a.equals(uint4) => {
-                    val b = for (x <- 0 until range.toInt) yield {
-                      //                      println("bits.slice : " + bits.slice(x * 4, (x * 4) + 4))
-                      Codec.decode(bits.slice(x * 4, (x * 4) + 4))(codec).require.value.toByte
-                    }
-                    b.toArray
-                  }
-                  case _ => bits.toByteArray
-                }
+                val padded: Array[Byte] = decode(codec,range,bits)
                 //                println("padded : " + padded.mkString("|"))
-                val value = padded.map(byte => {
+                val ans = padded.map(byte => {
                   byte.toInt
                 })
-                println("value : " + value.mkString("-"))
+                println("value : " + ans.mkString("-"))
                 fileIdx = fileIdx + bitCount.toInt
-                value
+                ans
               }
             }
             genRecAcc.put(y.camelCaseVar, value)
