@@ -801,8 +801,6 @@ object Files {
   def decode(codec:Codec[Int],range:Long, bits:BitVector,wordAllign:Option[Position] = Some(Right)): Array[Byte] = codec match {
     case a if a.equals(uint4) => {
       val b = for (x <- 0 until range.toInt) yield {
-        //                      println("decode x : " + x)
-        //                      println("bits.slice : " + bits.slice(x * 4, (x * 4) + 4))
         val bts = wordAlign(bits.slice(x * 4, (x * 4) + 4),4,Right)
         Codec.decode(bts)(codec).require.value.toByte
       }
@@ -849,30 +847,24 @@ object Files {
                   byte.toInt
                 })
                 fileIdx = fileIdx + bitCount.toInt
-                println("value : " + ans.mkString("-"))
+//                println("value : " + ans.mkString("-"))
                 ans
-//                "3A"
               }
               case d: Decimal => {
                 println(y.dataType)
                 val codec = getCodec(d.compact)
                 val bitCount: Long = getBitCount(codec,d.scale,d.precision)
-                //                println("bitCount : " + bitCount)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
-                //                println("bits : " + bits.toBin)
-                //                println("bits.length : " + bits.toBin.length)
                 val range = codec match {
                   case a if a.equals(uint4) => bits.size / 4
                   case _ => bits.size / 8
                 }
-                //                println("range : " + range)
                 val padded: Array[Byte] = decode(codec,range,bits)
-                //                println("padded : " + padded.mkString("|"))
                 val ans = padded.map(byte => {
                   byte.toInt
                 })
                 fileIdx = fileIdx + bitCount.toInt
-                println("value : " + ans.mkString("-"))
+//                println("value : " + ans.mkString("-"))
                 ans
               }
               case i: Integer => {
@@ -889,26 +881,22 @@ object Files {
                   }
                 }
                 val bitCount: Long = getBitCount(codec,i.scale)
-                //                println("bitCount : " + bitCount)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
-                //                println("bits : " + bits.toBin)
-                //                println("bits.length : " + bits.toBin.length)
                 val range = codec match {
                   case a if codec.equals(uint4) => bits.size / 4
                   case _ => bits.size / 8
                 }
-                //                println("range : " + range)
                 val padded: Array[Byte] = decode(codec,range,bits)
-                //                println("padded : " + padded.mkString("|"))
                 val ans = padded.map(byte => {
                   byte.toInt
                 })
-                println("value : " + ans.mkString("-"))
+//                println("value : " + ans.mkString("-"))
                 fileIdx = fileIdx + bitCount.toInt
                 ans
               }
             }
-            genRecAcc.put(y.camelCaseVar, value)
+            genRecAcc.put(y.camelCaseVar, value.mkString(",")) // value is an array at this point. Textified the payload for readability
+//            genRecAcc.put(y.camelCaseVar, value)
             genRecAcc
           }
         }

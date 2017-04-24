@@ -270,6 +270,8 @@ class CopyBookSchemaSpec extends WordSpec {
 
       genRec.put("svse258NoticeDetail", genRec2)
 
+      println("GENREC : " + genRec.toString)
+
       val datumWriter = new GenericDatumWriter[GenericRecord](parsed)
       val dataFileWriter = new DataFileWriter[GenericRecord](datumWriter)
       dataFileWriter.create(parsed, new File("src/test/resources/Svse258NoticeRecord.txt"))
@@ -306,7 +308,10 @@ class CopyBookSchemaSpec extends WordSpec {
       val bytes = Files.copyBytes("src/test/resources/test_dump_bin")
       bytes.toBin
       val genRecBuilder = Files.rawDataParse(bytes, parsed, roots)
-      genRecBuilder.mkString("-")
+      println("Generic record : ")
+      genRecBuilder.foreach({ rec =>
+        println("newGenRec : " + rec.toString)
+      })
 
     }
   }
