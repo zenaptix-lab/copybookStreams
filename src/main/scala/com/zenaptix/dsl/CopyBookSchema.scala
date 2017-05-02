@@ -40,6 +40,21 @@ case object Right extends Position
 
 /**
  *
+ */
+sealed trait Encoding
+
+/**
+ *
+ */
+case class ASCII() extends Encoding
+
+/**
+ *
+ */
+case class EBCDIC() extends Encoding
+
+/**
+ *
  * @param scale
  * @param precision
  * @param signPosition
@@ -51,7 +66,8 @@ case class Decimal(
   precision: Int,
   signPosition: Option[Position] = None,
   wordAlligned: Option[Position] = None,
-  compact: Option[Int] = None
+  compact: Option[Int] = None,
+  enc: Option[Encoding] = None
 )
   extends CobolType
 
@@ -66,7 +82,8 @@ case class Integer(
   scale: Int,
   signPosition: Option[Position] = None,
   wordAlligned: Option[Position] = None,
-  compact: Option[Int] = None
+  compact: Option[Int] = None,
+  enc: Option[Encoding] = None
 )
   extends CobolType
 
@@ -76,7 +93,11 @@ case class Integer(
  * @param wordAlligned
  */
 
-case class AlphaNumeric(length: Int, wordAlligned: Option[Position] = None)
+case class AlphaNumeric(
+  length: Int,
+  wordAlligned: Option[Position] = None,
+  enc: Option[Encoding] = None
+)
   extends CobolType
 
 /**
@@ -780,7 +801,7 @@ object Files {
     }
   }
 
-  def getBitCount(codec:Codec[Int],scale:Int,precision:Int=0) = {
+  def getBitCount(codec: Codec[Int], scale: Int, precision: Int = 0) = {
     scale match { //bitCount for the number of digits
       case a if a >= 1 && a <= 4 && !codec.equals(uint4) => {
         2 * 8
@@ -798,10 +819,10 @@ object Files {
     }
   }
 
-  def decode(codec:Codec[Int],range:Long, bits:BitVector,wordAllign:Option[Position] = Some(Right)): Array[Byte] = codec match {
+  def decode(codec: Codec[Int], range: Long, bits: BitVector, wordAllign: Option[Position] = Some(Right)): Array[Byte] = codec match {
     case a if a.equals(uint4) => {
       val b = for (x <- 0 until range.toInt) yield {
-        val bts = wordAlign(bits.slice(x * 4, (x * 4) + 4),4,Right)
+        val bts = wordAlign(bits.slice(x * 4, (x * 4) + 4), 4, Right)
         Codec.decode(bts)(codec).require.value.toByte
       }
       b.toArray
@@ -837,34 +858,34 @@ object Files {
               case a: AlphaNumeric => { //todo: Here the hardcoded values need to be fetch from flat file, text encoding will determine actual value.
                 val codec = uint8
                 val bitCount = a.length * 8
-                val bits = f.slice(fileIdx,fileIdx+bitCount)
+                val bits = f.slice(fileIdx, fileIdx + bitCount)
                 val range = codec match {
                   case a if a.equals(uint8) => bits.size / 8
                   case _ => bits.size / 8
                 }
-                val padded: Array[Byte] = decode(codec,range,bits)
+                val padded: Array[Byte] = decode(codec, range, bits)
                 val ans = padded.map(byte => {
                   byte.toInt
                 })
                 fileIdx = fileIdx + bitCount.toInt
-//                println("value : " + ans.mkString("-"))
+                //                println("value : " + ans.mkString("-"))
                 ans
               }
               case d: Decimal => {
                 println(y.dataType)
                 val codec = getCodec(d.compact)
-                val bitCount: Long = getBitCount(codec,d.scale,d.precision)
+                val bitCount: Long = getBitCount(codec, d.scale, d.precision)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
                 val range = codec match {
                   case a if a.equals(uint4) => bits.size / 4
                   case _ => bits.size / 8
                 }
-                val padded: Array[Byte] = decode(codec,range,bits)
+                val padded: Array[Byte] = decode(codec, range, bits)
                 val ans = padded.map(byte => {
                   byte.toInt
                 })
                 fileIdx = fileIdx + bitCount.toInt
-//                println("value : " + ans.mkString("-"))
+                //                println("value : " + ans.mkString("-"))
                 ans
               }
               case i: Integer => {
@@ -880,23 +901,23 @@ object Files {
                     uint4
                   }
                 }
-                val bitCount: Long = getBitCount(codec,i.scale)
+                val bitCount: Long = getBitCount(codec, i.scale)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
                 val range = codec match {
                   case a if codec.equals(uint4) => bits.size / 4
                   case _ => bits.size / 8
                 }
-                val padded: Array[Byte] = decode(codec,range,bits)
+                val padded: Array[Byte] = decode(codec, range, bits)
                 val ans = padded.map(byte => {
                   byte.toInt
                 })
-//                println("value : " + ans.mkString("-"))
+                //                println("value : " + ans.mkString("-"))
                 fileIdx = fileIdx + bitCount.toInt
                 ans
               }
             }
             genRecAcc.put(y.camelCaseVar, value.mkString(",")) // value is an array at this point. Textified the payload for readability
-//            genRecAcc.put(y.camelCaseVar, value)
+            //            genRecAcc.put(y.camelCaseVar, value)
             genRecAcc
           }
         }
