@@ -111,7 +111,7 @@ case class CopyBookSchema(cpyBook: String) {
    *
    * @return
    */
-  def parseTree(): Seq[Group] = {
+  def parseTree(enc:Encoding): Seq[Group] = {
     val tokens: Array[Array[String]] = tokenize()
     val lexed: Array[Map[String, String]] = tokens.map(l => lex(l))
 
@@ -149,7 +149,7 @@ case class CopyBookSchema(cpyBook: String) {
           level match {
             case i if i > q.level =>
               if (isLeaf) {
-                val t = typeAndLengthFromString(keywords, f._2)
+                val t = typeAndLengthFromString(keywords, f._2)(enc)
                 q.asInstanceOf[Group]
                   .add(
                     Statement(
@@ -175,7 +175,7 @@ case class CopyBookSchema(cpyBook: String) {
             case i if i < q.level =>
               val u = q.up().get.up().get.asInstanceOf[Group]
               if (isLeaf) {
-                val t = typeAndLengthFromString(keywords, f._2)
+                val t = typeAndLengthFromString(keywords, f._2)(enc)
                 u.add(
                   Statement(
                     level,
@@ -199,7 +199,7 @@ case class CopyBookSchema(cpyBook: String) {
               }
             case i if i == q.level =>
               if (isLeaf) {
-                val t = typeAndLengthFromString(keywords, f._2)
+                val t = typeAndLengthFromString(keywords, f._2)(enc)
                 q.up()
                   .get
                   .asInstanceOf[Group]
@@ -304,7 +304,7 @@ case class CopyBookSchema(cpyBook: String) {
   def typeAndLengthFromString(
     keywords: List[String],
     modifiers: Map[String, String]
-  ): CobolType = {
+  )(enc:Encoding): CobolType = {
     val comp: Option[Int] =
       if (keywords.contains("COMP-"))
         Some(modifiers.getOrElse("COMP-", "1").toInt)
@@ -318,10 +318,11 @@ case class CopyBookSchema(cpyBook: String) {
       case s if s.contains("X(") || s.contains("A(") =>
         AlphaNumeric(
           matcher.findFirstIn(s).getOrElse("(1)").drop(1).dropRight(1).toInt,
-          wordAlligned = if (sync) Some(Left) else None
+          wordAlligned = if (sync) Some(Left) else None,
+          Some(enc)
         )
       case s if s.contains("X") || s.contains("A") =>
-        AlphaNumeric(s.length, wordAlligned = if (sync) Some(Left) else None)
+        AlphaNumeric(s.length, wordAlligned = if (sync) Some(Left) else None,Some(enc))
       case s if s.contains("V") =>
         val dl = decimalLength(s)
         Decimal(
@@ -329,7 +330,8 @@ case class CopyBookSchema(cpyBook: String) {
           dl._1 + dl._2,
           if (s.startsWith("S")) Some(Left) else None,
           if (sync) Some(Right) else None,
-          comp
+          comp,
+          Some(enc)
         )
       case s if s.contains("9(") =>
         Integer(
@@ -337,14 +339,16 @@ case class CopyBookSchema(cpyBook: String) {
             matcher.findFirstIn(s).getOrElse("(1)").drop(1).dropRight(1).toInt,
           signPosition = if (s.startsWith("S")) Some(Left) else None,
           wordAlligned = if (sync) Some(Right) else None,
-          compact = comp
+          compact = comp,
+          Some(enc)
         )
       case s if s.contains("9") =>
         Integer(
           scale = s.length,
           signPosition = if (s.startsWith("S")) Some(Left) else None,
           wordAlligned = if (sync) Some(Right) else None,
-          comp
+          comp,
+          Some(enc)
         )
     }
   }
@@ -856,7 +860,10 @@ object Files {
             //          println("Statement : " + y.camelCaseVar)
             val value = y.dataType match {
               case a: AlphaNumeric => { //todo: Here the hardcoded values need to be fetch from flat file, text encoding will determine actual value.
-                val codec = uint8
+                val codec = a.enc match {
+                  case Some(ASCII()) => uint8
+                  case _ =>  uint8
+                }
                 val bitCount = a.length * 8
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
                 val range = codec match {
@@ -864,16 +871,25 @@ object Files {
                   case _ => bits.size / 8
                 }
                 val padded: Array[Byte] = decode(codec, range, bits)
-                val ans = padded.map(byte => {
-                  byte.toInt
-                })
+                val ans = a.enc match {
+                  case Some(ASCII()) => padded.map(byte => {
+                    byte.toInt
+                  })
+                  case Some(EBCDIC()) => padded.map(byte => {
+                    byte.toInt
+                  })
+                }
                 fileIdx = fileIdx + bitCount.toInt
                 //                println("value : " + ans.mkString("-"))
                 ans
               }
               case d: Decimal => {
                 println(y.dataType)
-                val codec = getCodec(d.compact)
+                val codec = d.enc match {
+                  case Some(ASCII()) => getCodec(d.compact)
+                  case _ =>  uint8
+                }
+//                val codec = getCodec(d.compact)
                 val bitCount: Long = getBitCount(codec, d.scale, d.precision)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
                 val range = codec match {
@@ -881,25 +897,23 @@ object Files {
                   case _ => bits.size / 8
                 }
                 val padded: Array[Byte] = decode(codec, range, bits)
-                val ans = padded.map(byte => {
-                  byte.toInt
-                })
+                val ans = d.enc match {
+                  case Some(ASCII()) => padded.map(byte => {
+                    byte.toInt
+                  })
+                  case Some(EBCDIC()) => padded.map(byte => {
+                    byte.toInt
+                  })
+                }
                 fileIdx = fileIdx + bitCount.toInt
                 //                println("value : " + ans.mkString("-"))
                 ans
               }
               case i: Integer => {
                 println(y.dataType)
-                val codec = i.compact match {
-                  case Some(x) if x == 1 || x == 4 => {
-                    //normal binary decoding
-                    uint(1)
-                  }
-                  case None => uint(1)
-                  case _ => {
-                    //bcd encoding
-                    uint4
-                  }
+                val codec = i.enc match {
+                  case Some(ASCII()) => getCodec(i.compact)
+                  case _ =>  uint8
                 }
                 val bitCount: Long = getBitCount(codec, i.scale)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
@@ -908,10 +922,14 @@ object Files {
                   case _ => bits.size / 8
                 }
                 val padded: Array[Byte] = decode(codec, range, bits)
-                val ans = padded.map(byte => {
-                  byte.toInt
-                })
-                //                println("value : " + ans.mkString("-"))
+                val ans = i.enc match {
+                  case Some(ASCII()) => padded.map(byte => {
+                    byte.toInt
+                  })
+                  case Some(EBCDIC()) => padded.map(byte => {
+                    byte.toInt
+                  })
+                }
                 fileIdx = fileIdx + bitCount.toInt
                 ans
               }

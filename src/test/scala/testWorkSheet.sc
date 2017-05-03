@@ -6,3 +6,5 @@ dec match {
     case e:Option[ASCII] => println("ASCII")
   }
 }
+
+List(1,2,3).foldLeft(1)((acc,next) => acc*next)

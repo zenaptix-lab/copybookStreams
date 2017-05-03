@@ -97,7 +97,7 @@ class CopyBookSchemaSpec extends WordSpec {
 
   //println(s"lines is $lines")
 
-  val roots: Seq[Group] = CopyBookSchema(lines).parseTree()
+  val roots: Seq[Group] = CopyBookSchema(lines).parseTree(ASCII())
   //  val roots: Seq[Group] = CopyBookSchema(cpyBook).parseTree()
   println("Roots :  " + roots.mkString("\n"))
 
@@ -302,7 +302,7 @@ class CopyBookSchemaSpec extends WordSpec {
 
       val source: BufferedSource = Source.fromFile("src/test/resources/SVSE258.txt")
       val lines: String = try source.getLines().mkString("\n") finally source.close()
-      val roots: Seq[Group] = CopyBookSchema(lines).parseTree()
+      val roots: Seq[Group] = CopyBookSchema(lines).parseTree(ASCII())
       println("Roots :  " + roots.mkString("\n"))
       val parsed = new Schema.Parser().parse(new File("src/test/resources/Svse258NoticeRecord.avsc"))
       val bytes = Files.copyBytes("src/test/resources/test_dump_bin")
