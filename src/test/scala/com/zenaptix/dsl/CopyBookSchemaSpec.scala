@@ -312,7 +312,6 @@ class CopyBookSchemaSpec extends WordSpec {
       genRecBuilder.foreach({ rec =>
         println("newGenRec : " + rec.toString)
       })
-
     }
   }
   /* "For multible copybooks the test" should {

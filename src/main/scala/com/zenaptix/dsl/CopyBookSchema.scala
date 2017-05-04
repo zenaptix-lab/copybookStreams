@@ -126,10 +126,8 @@ case class CopyBookSchema(cpyBook: String) {
     val breakpoints: Seq[(String, (Int, Int))] = c.map(i => (i._1._1, (i._1._2, i._2)))
     println("breakpoints : " + breakpoints.mkString(";"))
 
-    val forest: Seq[Seq[((Int, String), Map[String, String])]] = breakpoints.map(p => lines.slice(p._2._1, p._2._2)) //forest should only have multible items if there is a duplicate level
+    val forest: Seq[Seq[((Int, String), Map[String, String])]] = breakpoints.map(p => lines.slice(p._2._1, p._2._2)) //forest should only have multiple items if there is a duplicate level
     println("FOREST : " + forest.mkString("\n"))
-
-    //    forest.foreach(root => println(s"${root._1._1} : ${root._1._2}"))
 
     forest.map { f =>
       val root = Group(1, f.head._1._2,
