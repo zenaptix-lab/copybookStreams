@@ -41,17 +41,35 @@ case object Right extends Position
 /**
  *
  */
-sealed trait Encoding
+sealed trait Encoding {
+  def codec[A](comp:Option[Int]):Codec[A]
+}
 
 /**
  *
  */
-case class ASCII() extends Encoding
+case class ASCII() extends Encoding{
+ def codec[A](comp:Option[Int]):Codec[A] = {
+   val cd = comp match {
+     case Some(x) if x.isInstanceOf[Int] => Files.getCodec(comp)
+     case None => uint8
+   }
+   cd.asInstanceOf[Codec[A]]
+ }
+}
 
 /**
  *
  */
-case class EBCDIC() extends Encoding
+case class EBCDIC() extends Encoding{
+  def codec[A](comp:Option[Int]):Codec[A] = {
+    val cd = comp match {
+      case Some(x) if x.isInstanceOf[Int] => uint8
+      case None => uint8
+    }
+    cd.asInstanceOf[Codec[A]]
+  }
+}
 
 /**
  *
@@ -858,10 +876,8 @@ object Files {
             //          println("Statement : " + y.camelCaseVar)
             val value = y.dataType match {
               case a: AlphaNumeric => { //todo: Here the hardcoded values need to be fetch from flat file, text encoding will determine actual value.
-                val codec = a.enc match {
-                  case Some(ASCII()) => uint8
-                  case _ =>  uint8
-                }
+                val codec = a.enc.getOrElse(ASCII()).codec[Int](Some(8))
+                println("AlphaCodec : " + codec)
                 val bitCount = a.length * 8
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
                 val range = codec match {
@@ -883,11 +899,8 @@ object Files {
               }
               case d: Decimal => {
                 println(y.dataType)
-                val codec = d.enc match {
-                  case Some(ASCII()) => getCodec(d.compact)
-                  case _ =>  uint8
-                }
-//                val codec = getCodec(d.compact)
+                val codec = d.enc.getOrElse(ASCII()).codec[Int](d.compact)
+                println("DecCodec : " + codec)
                 val bitCount: Long = getBitCount(codec, d.scale, d.precision)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
                 val range = codec match {
@@ -909,10 +922,8 @@ object Files {
               }
               case i: Integer => {
                 println(y.dataType)
-                val codec = i.enc match {
-                  case Some(ASCII()) => getCodec(i.compact)
-                  case _ =>  uint8
-                }
+                val codec = i.enc.getOrElse(ASCII()).codec[Int](i.compact)
+                println("IntCodec : " + codec)
                 val bitCount: Long = getBitCount(codec, i.scale)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
                 val range = codec match {
