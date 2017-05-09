@@ -49,9 +49,20 @@ sealed trait Encoding {
  *
  */
 case class ASCII() extends Encoding{
+  def getCodec(compac: Option[Int]): Codec[Int] = {
+    compac match {
+      case Some(x) if x == 1 || x == 4 => {
+        uint(1) //normal binary decoding
+      }
+      case None => uint(1)
+      case _ => {
+        uint4 //bcd encoding
+      }
+    }
+  }
  def codec[A](comp:Option[Int]):Codec[A] = {
    val cd = comp match {
-     case Some(x) if x.isInstanceOf[Int] => Files.getCodec(comp)
+     case Some(x) if x.isInstanceOf[Int] => getCodec(comp)
      case None => uint8
    }
    cd.asInstanceOf[Codec[A]]
@@ -807,19 +818,19 @@ object Files {
     }
   }
 
-  def getCodec(compac: Option[Int]): Codec[Int] = {
-    compac match {
-      case Some(x) if x == 1 || x == 4 => {
-        //normal binary decoding
-        uint(1)
-      }
-      case None => uint(1)
-      case _ => {
-        //bcd encoding
-        uint4
-      }
-    }
-  }
+//  def getCodec(compac: Option[Int]): Codec[Int] = {
+//    compac match {
+//      case Some(x) if x == 1 || x == 4 => {
+//        //normal binary decoding
+//        uint(1)
+//      }
+//      case None => uint(1)
+//      case _ => {
+//        //bcd encoding
+//        uint4
+//      }
+//    }
+//  }
 
   def getBitCount(codec: Codec[Int], scale: Int, precision: Int = 0) = {
     scale match { //bitCount for the number of digits
