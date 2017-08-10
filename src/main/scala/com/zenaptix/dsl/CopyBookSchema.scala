@@ -156,7 +156,7 @@ case class CopyBookSchema(cpyBook: String) {
     println("breakpoints : " + breakpoints.mkString(";"))
 
     val forest: Seq[Seq[((Int, String), Map[String, String])]] = breakpoints.map(p => lines.slice(p._2._1, p._2._2)) //forest should only have multiple items if there is a duplicate level
-    println("FOREST : " + forest.mkString("\n"))
+    println(Console.GREEN + "FOREST : " + forest.mkString("\n") + Console.WHITE)
 
     forest.map { f =>
       val root = Group(1, f.head._1._2,
@@ -782,6 +782,19 @@ object Files {
       d.listFiles.filter(_.isFile).toList
     } else {
       List[File]()
+    }
+  }
+
+  def createCaseClasses(roots:Seq[Group],packageName:String="com.zenaptix.test") = {
+    roots.foreach { root =>
+      println(s"Creating case classes for root : ${root.name}")
+      val c = root.traverseGroups.map(g => g.asCaseClass)
+      //        println("Case Classes : ")
+      //        c.foreach(g => println(g))
+      root.printToFile(new File(s"src/test/scala/${packageName.replace(".", "/")}/${root.camelCased}.scala")) { p =>
+        p.println(s"package $packageName")
+        c.foreach(p.println)
+      }
     }
   }
 
