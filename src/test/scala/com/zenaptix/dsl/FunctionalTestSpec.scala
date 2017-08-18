@@ -5,7 +5,10 @@ import java.io.File
 import com.sksamuel.avro4s.AvroSchema
 import com.zenaptix.dsl.CopyBookResources.roots
 import com.zenaptix.test.{Cqsf602w, Svse258NoticeRecord}
+import org.apache.avro.Schema
+import org.apache.avro.generic.GenericData
 import org.scalatest.WordSpec
+import scodec.bits.BitVector
 
 import scala.io.{BufferedSource, Source}
 
@@ -30,17 +33,18 @@ class FunctionalTestSpec extends WordSpec {
   Files.createCaseClasses(roots)
 
   println(Console.GREEN + "create AVRO schema from AST" + Console.WHITE)
-  val schema = AvroSchema[Cqsf602w]
+  val schema: Schema = AvroSchema[Cqsf602w]
   println(schema.toString(true))
+  println(schema.getFields)
 
   println(Console.GREEN + "parse raw data file to generic record" + Console.WHITE)
-  val bytes = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
+  val bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
 //  println(s"Bitvector of input file ${bytes.toBin}")
-  val genRecBuilder = Files.rawDataParse(bytes, schema, roots)
+  val genRecBuilder: Seq[GenericData.Record] = Files.rawDataParse(bytes, schema, roots)
   println("Generic record : ")
-  genRecBuilder.foreach({
-    rec =>
-      println("newGenRec : " + rec.toString)
-  })
-
+  genRecBuilder.head.toString
+//  genRecBuilder.foreach({
+//    rec =>
+//      println("newGenRec : " + rec.toString)
+//  })
 }

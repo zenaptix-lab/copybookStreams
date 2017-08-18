@@ -13,7 +13,7 @@ class CopyBookSchemaSpec extends WordSpec {
   "CopyBookSchema" should {
 
     "build a navigable AST" in {
-      println(Console.GREEN + "build a navigable AST" + Console.WHITE)
+      println(Console.GREEN + "build a navigatable AST" + Console.WHITE)
       val tree = Group(1, "root", mutable.ArrayBuffer(), parent = None)
       val node = tree
         .add(Group(10, "test", mutable.ArrayBuffer(), parent = None))

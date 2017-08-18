@@ -1,6 +1,7 @@
 package com.zenaptix.dsl
 
 import java.io.{File, FileInputStream, FileOutputStream, IOException}
+import java.nio.ByteBuffer
 
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
@@ -9,138 +10,165 @@ import scodec.bits.BitVector
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.util.matching.Regex
-
 import scodec._
 import scodec.bits._
 import codecs._
+import shapeless.HNil
 
 /**
- * Created by ian on 2017/01/21.
- */
+  * Created by ian on 2017/01/21.
+  */
 
 /**
- *
- */
+  *
+  */
 sealed trait CobolType
 
 /**
- *
- */
+  *
+  */
 sealed trait Position
 
 /**
- *
- */
+  *
+  */
 case object Left extends Position
 
 /**
- *
- */
+  *
+  */
 case object Right extends Position
 
 /**
- *
- */
+  *
+  */
 sealed trait Encoding {
-  def codec[A](comp:Option[Int]):Codec[A]
+  def codec(comp: Option[Int], scale: Int, signPosition: Option[Position]): Codec[_ <: AnyVal]
 }
 
 /**
- *
- */
-case class ASCII() extends Encoding{
-  def getCodec(compac: Option[Int]): Codec[Int] = {
-    compac match {
-      case Some(x) if x == 1 || x == 4 => {
-        uint(1) //normal binary decoding
-      }
-      case None => uint(1)
-      case _ => {
-        uint4 //bcd encoding
-      }
-    }
-  }
- def codec[A](comp:Option[Int]):Codec[A] = {
-   val cd = comp match {
-     case Some(x) if x.isInstanceOf[Int] => getCodec(comp)
-     case None => uint8
-   }
-   cd.asInstanceOf[Codec[A]]
- }
-}
-
-/**
- *
- */
-case class EBCDIC() extends Encoding{
-  def codec[A](comp:Option[Int]):Codec[A] = {
+  *
+  */
+case class ASCII() extends Encoding {
+  def codec(comp: Option[Int], scale: Int, signPosition: Option[Position]): Codec[_ <: AnyVal] = {
     val cd = comp match {
-      case Some(x) if x.isInstanceOf[Int] => uint8
-      case None => uint8
+      case Some(x) if x.isInstanceOf[Int] => {
+        x match {
+          case bin if bin == 0 || bin == 4 => {
+            scale match { //if native binary follow IBM guide to digit binary length
+              case a if a >= 1 && a <= 4 => {
+                if (signPosition.getOrElse(None) != None) int16 else uint16
+              }
+              case b if b >= 5 && b <= 9 => {
+                if (signPosition.getOrElse(None) != None) int32 else uint32
+              }
+              case c if c >= 10 && c <= 18 => {
+                if (signPosition.getOrElse(None) != None) int64 else uint(64)
+              }
+            }
+          }
+          case spfloat if spfloat == 1 => float
+          case dpfloat if dpfloat == 2 => floatL
+          case bcd if bcd == 3 => uint4
+        }
+      }
+      case None => uint8 // DISPLAY(Every digit=byte)
     }
-    cd.asInstanceOf[Codec[A]]
+    cd
   }
 }
 
 /**
- *
- * @param scale
- * @param precision
- * @param signPosition
- * @param wordAlligned
- * @param compact
- */
+  *
+  */
+case class EBCDIC() extends Encoding {
+  def codec(comp: Option[Int], scale: Int, signPosition: Option[Position]): Codec[_ <: AnyVal] = {
+    val cd = comp match {
+      case Some(x) if x.isInstanceOf[Int] => {
+        x match {
+          case bin if bin == 0 || bin == 4 => {
+            scale match { //if native binary follow IBM guide to digit binary length
+              case a if a >= 1 && a <= 4 => {
+                if (signPosition.getOrElse(None) != None) int16 else uint16
+              }
+              case b if b >= 5 && b <= 9 => {
+                if (signPosition.getOrElse(None) != None) int32 else uint32
+              }
+              case c if c >= 10 && c <= 18 => {
+                if (signPosition.getOrElse(None) != None) int64 else uint(64)
+              }
+            }
+          }
+          case spfloat if spfloat == 1 => float
+          case dpfloat if dpfloat == 2 => floatL
+          case bcd if bcd == 3 => uint4
+        }
+      }
+      case None => uint8 // DISPLAY(Every digit=byte), remember highest nybble of LSB contains the sign
+    }
+    cd
+  }
+}
+
+/**
+  *
+  * @param scale
+  * @param precision
+  * @param signPosition
+  * @param wordAlligned
+  * @param compact
+  */
 case class Decimal(
-  scale: Int,
-  precision: Int,
-  signPosition: Option[Position] = None,
-  wordAlligned: Option[Position] = None,
-  compact: Option[Int] = None,
-  enc: Option[Encoding] = None
-)
+                    scale: Int,
+                    precision: Int,
+                    signPosition: Option[Position] = None,
+                    wordAlligned: Option[Position] = None,
+                    compact: Option[Int] = None,
+                    enc: Option[Encoding] = None
+                  )
   extends CobolType
 
 /**
- *
- * @param scale
- * @param signPosition
- * @param wordAlligned
- * @param compact
- */
+  *
+  * @param scale
+  * @param signPosition
+  * @param wordAlligned
+  * @param compact
+  */
 case class Integer(
-  scale: Int,
-  signPosition: Option[Position] = None,
-  wordAlligned: Option[Position] = None,
-  compact: Option[Int] = None,
-  enc: Option[Encoding] = None
-)
+                    scale: Int,
+                    signPosition: Option[Position] = None,
+                    wordAlligned: Option[Position] = None,
+                    compact: Option[Int] = None,
+                    enc: Option[Encoding] = None
+                  )
   extends CobolType
 
 /**
- *
- * @param length
- * @param wordAlligned
- */
+  *
+  * @param length
+  * @param wordAlligned
+  */
 
 case class AlphaNumeric(
-  length: Int,
-  wordAlligned: Option[Position] = None,
-  enc: Option[Encoding] = None
-)
+                         length: Int,
+                         wordAlligned: Option[Position] = None,
+                         enc: Option[Encoding] = None
+                       )
   extends CobolType
 
 /**
- *
- * @param cpyBook
- */
+  *
+  * @param cpyBook
+  */
 case class CopyBookSchema(cpyBook: String) {
   val matcher: Regex = "\\(([^)]+)\\)".r
 
   /**
-   *
-   * @return
-   */
-  def parseTree(enc:Encoding): Seq[Group] = {
+    *
+    * @return
+    */
+  def parseTree(enc: Encoding): Seq[Group] = {
     val tokens: Array[Array[String]] = tokenize()
     val lexed: Array[Map[String, String]] = tokens.map(l => lex(l))
 
@@ -166,44 +194,19 @@ case class CopyBookSchema(cpyBook: String) {
       val trees = f
         .drop(1) // root already added so drop first line
         .foldLeft[CBTree](root)((q, f) => {
-          val keywords = f._2.keys.toList
-          val isLeaf = keywords.contains("PIC") || keywords.contains("COMP-")
-          val level: Int = f._1._1
-          val name = f._1._2
-          val redefines = f._2.get("REDEFINES")
-          val occurs = f._2.get("OCCURS").map(i => i.toInt)
-          val to = f._2.get("TO").map(i => i.toInt)
-          level match {
-            case i if i > q.level =>
-              if (isLeaf) {
-                val t = typeAndLengthFromString(keywords, f._2)(enc)
-                q.asInstanceOf[Group]
-                  .add(
-                    Statement(
-                      level,
-                      name,
-                      t,
-                      redefines = redefines,
-                      occurs = occurs,
-                      to = to
-                    )
-                  )
-              } else
-                q.asInstanceOf[Group]
-                  .add(
-                    Group(
-                      level,
-                      name,
-                      redefines = redefines,
-                      occurs = occurs,
-                      to = to
-                    )
-                  )
-            case i if i < q.level =>
-              val u = q.up().get.up().get.asInstanceOf[Group]
-              if (isLeaf) {
-                val t = typeAndLengthFromString(keywords, f._2)(enc)
-                u.add(
+        val keywords = f._2.keys.toList
+        val isLeaf = keywords.contains("PIC") || keywords.contains("COMP-")
+        val level: Int = f._1._1
+        val name = f._1._2
+        val redefines = f._2.get("REDEFINES")
+        val occurs = f._2.get("OCCURS").map(i => i.toInt)
+        val to = f._2.get("TO").map(i => i.toInt)
+        level match {
+          case i if i > q.level =>
+            if (isLeaf) {
+              val t = typeAndLengthFromString(keywords, f._2)(enc)
+              q.asInstanceOf[Group]
+                .add(
                   Statement(
                     level,
                     name,
@@ -213,8 +216,9 @@ case class CopyBookSchema(cpyBook: String) {
                     to = to
                   )
                 )
-              } else {
-                u.add(
+            } else
+              q.asInstanceOf[Group]
+                .add(
                   Group(
                     level,
                     name,
@@ -223,58 +227,82 @@ case class CopyBookSchema(cpyBook: String) {
                     to = to
                   )
                 )
-              }
-            case i if i == q.level =>
-              if (isLeaf) {
-                val t = typeAndLengthFromString(keywords, f._2)(enc)
-                q.up()
-                  .get
-                  .asInstanceOf[Group]
-                  .add(
-                    Statement(
-                      level,
-                      name,
-                      t,
-                      redefines = redefines,
-                      occurs = occurs,
-                      to = to
-                    )
+          case i if i < q.level =>
+            val u = q.up().get.up().get.asInstanceOf[Group]
+            if (isLeaf) {
+              val t = typeAndLengthFromString(keywords, f._2)(enc)
+              u.add(
+                Statement(
+                  level,
+                  name,
+                  t,
+                  redefines = redefines,
+                  occurs = occurs,
+                  to = to
+                )
+              )
+            } else {
+              u.add(
+                Group(
+                  level,
+                  name,
+                  redefines = redefines,
+                  occurs = occurs,
+                  to = to
+                )
+              )
+            }
+          case i if i == q.level =>
+            if (isLeaf) {
+              val t = typeAndLengthFromString(keywords, f._2)(enc)
+              q.up()
+                .get
+                .asInstanceOf[Group]
+                .add(
+                  Statement(
+                    level,
+                    name,
+                    t,
+                    redefines = redefines,
+                    occurs = occurs,
+                    to = to
                   )
-              } else
-                q.up()
-                  .get
-                  .asInstanceOf[Group]
-                  .add(
-                    Group(
-                      level,
-                      name,
-                      redefines = redefines,
-                      occurs = occurs,
-                      to = to
-                    )
+                )
+            } else
+              q.up()
+                .get
+                .asInstanceOf[Group]
+                .add(
+                  Group(
+                    level,
+                    name,
+                    redefines = redefines,
+                    occurs = occurs,
+                    to = to
                   )
-          }
-        })
+                )
+        }
+      })
       root
     }
   }
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def tokenize(): Array[Array[String]] = {
     val doc = cpyBook
       // line breaks
       .split("\\r?\\n")
       // ignore first 6 columns (historically for line numbers)
       .map(
-        l =>
-          l.drop(6)
-            // remove unnecessary white space
-            .replaceAll("\\s\\s+", " ")
-            .trim()
-      )
+      l =>
+        l.drop(6)
+          // remove unnecessary white space
+          .replaceAll("\\s\\s+", " ")
+          .trim()
+    )
       // ignore commented lines§
       .filterNot(l => l.startsWith("*"))
       .mkString(" ")
@@ -284,15 +312,17 @@ case class CopyBookSchema(cpyBook: String) {
       .filterNot(l =>
         l.startsWith("66") || l.startsWith("77") || l
           .startsWith("88") || l.trim().isEmpty)
-      .map(l => { l.trim().split("\\s+") })
+      .map(l => {
+        l.trim().split("\\s+")
+      })
 
   }
 
   /**
-   *
-   * @param tokens
-   * @return
-   */
+    *
+    * @param tokens
+    * @return
+    */
   def lex(tokens: Array[String]): Map[String, String] = {
     val keywords =
       List("REDEFINES ", "OCCURS ", "TO ", "PIC ", "COMP-", "COMP")
@@ -308,11 +338,11 @@ case class CopyBookSchema(cpyBook: String) {
   }*/
 
   /**
-   *
-   * @param statement
-   * @param word
-   * @return
-   */
+    *
+    * @param statement
+    * @param word
+    * @return
+    */
   def reservedWordModifier(statement: String, word: String): Option[String] = {
     if (word.startsWith("SYNC") && statement.contains("SYNC")) Some("Right")
     else if (word == "COMP" && statement.contains("COMP"))
@@ -323,15 +353,15 @@ case class CopyBookSchema(cpyBook: String) {
   }
 
   /**
-   *
-   * @param keywords
-   * @param modifiers
-   * @return
-   */
+    *
+    * @param keywords
+    * @param modifiers
+    * @return
+    */
   def typeAndLengthFromString(
-    keywords: List[String],
-    modifiers: Map[String, String]
-  )(enc:Encoding): CobolType = {
+                               keywords: List[String],
+                               modifiers: Map[String, String]
+                             )(enc: Encoding): CobolType = {
     val comp: Option[Int] =
       if (keywords.contains("COMP-"))
         Some(modifiers.getOrElse("COMP-", "1").toInt)
@@ -349,7 +379,7 @@ case class CopyBookSchema(cpyBook: String) {
           Some(enc)
         )
       case s if s.contains("X") || s.contains("A") =>
-        AlphaNumeric(s.length, wordAlligned = if (sync) Some(Left) else None,Some(enc))
+        AlphaNumeric(s.length, wordAlligned = if (sync) Some(Left) else None, Some(enc))
       case s if s.contains("V") =>
         val dl = decimalLength(s)
         Decimal(
@@ -381,10 +411,10 @@ case class CopyBookSchema(cpyBook: String) {
   }
 
   /**
-   *
-   * @param s
-   * @return
-   */
+    *
+    * @param s
+    * @return
+    */
   def decimalLength(s: String): (Int, Int) = {
     //get all the numbers in brackets i.e. 9(5)v9(2)
     val parts = s.split('V')
@@ -399,13 +429,13 @@ case class CopyBookSchema(cpyBook: String) {
 }
 
 /**
- *
- */
+  *
+  */
 sealed trait CBTree {
   val counter: Iterator[Int] = (0 to 999).toArray.toIterator
   /**
-   *
-   */
+    *
+    */
   val camelCased: String = {
     if (name == "FILLER") {
       camelCase(parent.getOrElse(Group(1, "Root")).camelCased) + counter
@@ -413,14 +443,18 @@ sealed trait CBTree {
     } else camelCase(name)
   }
   /**
-   *
-   */
+    *
+    */
   val camelCaseVar: String =
     camelCased.updated(0, camelCased(0).toLower)
 
   def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) {
     val p = new java.io.PrintWriter(f)
-    try { op(p) } finally { p.close() }
+    try {
+      op(p)
+    } finally {
+      p.close()
+    }
   }
 
   def level: Int
@@ -436,9 +470,9 @@ sealed trait CBTree {
   def to: Option[Int]
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def nextSiblingLeaf(): Option[Statement] = parent match {
     case Some(b) =>
       val me = b.children.indexOf(this)
@@ -449,9 +483,9 @@ sealed trait CBTree {
   }
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def path(): String = {
     @tailrec
     def addToPath(linage: String, tree: CBTree): String = {
@@ -462,29 +496,30 @@ sealed trait CBTree {
           "/" + tree.name + linage
       }
     }
+
     addToPath("", this)
   }
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def up(): Option[CBTree] = this.parent
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   override def toString: String = {
     s"${" " * 2 * level}$camelCased ${camelCase(redefines.getOrElse(""))}"
     //s"${getClass.getName} -> name:$name, parent:$parent"
   }
 
   /**
-   *
-   * @param s
-   * @return
-   */
+    *
+    * @param s
+    * @return
+    */
   def camelCase(s: String): String = {
     s.replace(".", "")
       .split("-")
@@ -493,51 +528,51 @@ sealed trait CBTree {
   }
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def asScala: String = s"$camelCased $scalaType"
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def scalaType: String
 
 }
 
 /**
- *
- * @param level
- * @param name
- * @param dataType
- * @param parent
- * @param redefines
- * @param occurs
- * @param to
- */
+  *
+  * @param level
+  * @param name
+  * @param dataType
+  * @param parent
+  * @param redefines
+  * @param occurs
+  * @param to
+  */
 case class Statement(
-  level: Int,
-  name: String,
-  dataType: CobolType,
-  parent: Option[Group] = None,
-  redefines: Option[String] = None,
-  occurs: Option[Int] = None,
-  to: Option[Int] = None
-)
+                      level: Int,
+                      name: String,
+                      dataType: CobolType,
+                      parent: Option[Group] = None,
+                      redefines: Option[String] = None,
+                      occurs: Option[Int] = None,
+                      to: Option[Int] = None
+                    )
   extends CBTree {
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   override def toString: String = {
     s"${" " * 2 * level}$camelCased ${camelCase(redefines.getOrElse(""))} $dataType"
   }
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def scalaType: String = {
     val d = dataType match {
       case a: AlphaNumeric => "String"
@@ -565,30 +600,30 @@ case class Statement(
 }
 
 /**
- *
- * @param level
- * @param name
- * @param children
- * @param parent
- * @param redefines
- * @param occurs
- * @param to
- */
+  *
+  * @param level
+  * @param name
+  * @param children
+  * @param parent
+  * @param redefines
+  * @param occurs
+  * @param to
+  */
 case class Group(
-  level: Int,
-  name: String,
-  children: mutable.ArrayBuffer[CBTree] = mutable.ArrayBuffer(),
-  parent: Option[Group] = None,
-  redefines: Option[String] = None,
-  occurs: Option[Int] = None,
-  to: Option[Int] = None
-)
+                  level: Int,
+                  name: String,
+                  children: mutable.ArrayBuffer[CBTree] = mutable.ArrayBuffer(),
+                  parent: Option[Group] = None,
+                  redefines: Option[String] = None,
+                  occurs: Option[Int] = None,
+                  to: Option[Int] = None
+                )
   extends CBTree {
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def asCaseClass: String = {
     mutable.StringBuilder.newBuilder
       .appendAll(s"case class $camelCased (")
@@ -600,10 +635,10 @@ case class Group(
   }
 
   /**
-   *
-   * @param path
-   * @return
-   */
+    *
+    * @param path
+    * @return
+    */
   def get(path: String): Option[CBTree] = {
     var parts = path.split("/").filter(_ != "")
     parts = if (parts.head == name) parts.drop(1) else parts
@@ -629,9 +664,9 @@ case class Group(
   }
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def traverseStatements: Seq[Statement] = {
     def dfs(r: Group): Seq[Statement] = {
       if (r.children.nonEmpty) {
@@ -642,15 +677,17 @@ case class Group(
       } else if (r.parent.isDefined) dfs(r.parent.get)
       else Nil
     }
+
     dfs(this)
   }
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def traverseGroups: Seq[Group] = {
     val comb: mutable.ArrayBuffer[Group] = mutable.ArrayBuffer[Group](this)
+
     // Todo @tailrec
     def dfs(r: Group): Unit = {
       if (r.children.nonEmpty) {
@@ -660,14 +697,15 @@ case class Group(
         }
       }
     }
+
     dfs(this)
     comb
   }
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def allChildGroups(): Seq[Group] = {
     children.collect {
       case b: Group => b
@@ -675,11 +713,12 @@ case class Group(
   }
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def traverseAll: Seq[CBTree] = {
     val comb: mutable.ArrayBuffer[CBTree] = mutable.ArrayBuffer[CBTree](this)
+
     // Todo @tailrec
     def dfs(r: Group): Unit = {
       if (r.children.nonEmpty) {
@@ -693,15 +732,16 @@ case class Group(
         dfs(r.parent.get)
       } else Nil
     }
+
     dfs(this)
     comb
   }
 
   /**
-   *
-   * @param data
-   * @return
-   */
+    *
+    * @param data
+    * @return
+    */
   def parseData(data: String): (String, Seq[Any]) = {
     val d = BitVector(data.getBytes)
     // Todo
@@ -727,11 +767,11 @@ case class Group(
   }
 
   /**
-   *
-   * @param tree
-   * @tparam T
-   * @return
-   */
+    *
+    * @param tree
+    * @tparam T
+    * @return
+    */
   def add[T <: CBTree](tree: T): CBTree = {
     val c = tree.getClass.getSimpleName match {
       case "Group" =>
@@ -758,24 +798,26 @@ case class Group(
   }
 
   /**
-   *
-   * @return
-   */
+    *
+    * @return
+    */
   def scalaType: String =
     if (occurs.isDefined) s":Array[$camelCased]" else s":$camelCased"
 
 }
 
 sealed abstract class ParseResult[+T]
+
 case class ParseSuccess[T](result: T, remainder: BitVector) extends ParseResult[T]
+
 case class ParseError[T](result: T, remainder: BitVector) extends ParseResult[Nothing]
 
 object Files {
   /**
-   *
-   * @param dir : Files directory
-   * @return
-   */
+    *
+    * @param dir : Files directory
+    * @return
+    */
   def getListOfFiles(dir: String): List[File] = {
     val d = new File(dir)
     if (d.exists && d.isDirectory) {
@@ -785,7 +827,7 @@ object Files {
     }
   }
 
-  def createCaseClasses(roots:Seq[Group],packageName:String="com.zenaptix.test") = {
+  def createCaseClasses(roots: Seq[Group], packageName: String = "com.zenaptix.test") = {
     roots.foreach { root =>
       println(s"Creating case classes for root : ${root.name}")
       val c = root.traverseGroups.map(g => g.asCaseClass)
@@ -806,7 +848,7 @@ object Files {
       in = Some(new FileInputStream(fileName))
       //    out = Some(new FileOutputStream("/tmp/Test.class.copy"))
       var c = 0
-      while ({
+      while ( {
         c = in.get.read()
         c != -1
       }) {
@@ -822,153 +864,225 @@ object Files {
     vec
   }
 
-  def wordAlign(f: BitVector, wordSize: Int, pos: Position): BitVector = {
+  def wordAlign(f: BitVector, wordSize: Int, align: Position): BitVector = {
     require(f.size <= wordSize)
-    pos match {
-      case Left if (f.size != wordSize) => f.padLeft(wordSize - f.size)
-      case Right if (f.size != wordSize) => f.padRight(wordSize - f.size)
+    align match {
+      case Left if f.size != wordSize => f.padLeft(wordSize - f.size)
+      case Right if f.size != wordSize => f.padRight(wordSize - f.size)
       case _ => f
     }
   }
 
-//  def getCodec(compac: Option[Int]): Codec[Int] = {
-//    compac match {
-//      case Some(x) if x == 1 || x == 4 => {
-//        //normal binary decoding
-//        uint(1)
-//      }
-//      case None => uint(1)
-//      case _ => {
-//        //bcd encoding
-//        uint4
-//      }
-//    }
-//  }
-
-  def getBitCount(codec: Codec[Int], scale: Int, precision: Int = 0) = {
-    scale match { //bitCount for the number of digits
-      case a if a >= 1 && a <= 4 && !codec.equals(uint4) => {
-        2 * 8
+  def getBitCount(codec: Codec[_ <: AnyVal], comp: Option[Int], scale: Int) = {
+    comp match {
+      case Some(x) => {
+        x match {
+          case a if a == 3 => scale * codec.sizeBound.lowerBound.toInt //bcd
+          case _ => codec.sizeBound.lowerBound.toInt // bin/float/floatL
+        }
       }
-      case b if b >= 5 && b <= 9 && !codec.equals(uint4) => {
-        4 * 8
-      }
-      case c if c > 0 && codec.equals(uint4) => {
-        (c + precision) * 4
-      }
-      case _ => {
-        println("NO MATCH")
-        8 * 8
-      }
+      case None => scale * codec.sizeBound.lowerBound.toInt
     }
   }
 
-  def decode(codec: Codec[Int], range: Long, bits: BitVector, wordAllign: Option[Position] = Some(Right)): Array[Byte] = codec match {
-    case a if a.equals(uint4) => {
-      val b = for (x <- 0 until range.toInt) yield {
-        val bts = wordAlign(bits.slice(x * 4, (x * 4) + 4), 4, Right)
-        Codec.decode(bts)(codec).require.value.toByte
+  def decode(codec: Codec[_ <: AnyVal], enc: Encoding, scale: Int, bits: BitVector, comp: Option[Int], align: Option[Position] = None, signPosition: Option[Position]): Array[Byte] = {
+    val digitBitSize = codec.sizeBound.lowerBound.toInt
+    val bytes = enc match {
+      case asc: ASCII => comp match {
+        case Some(compact) => compact match {
+          case a if a == 3 => { //bcd
+            val bte = for (x <- 0 until scale) yield {
+              val bts = wordAlign(bits.slice(x * digitBitSize, (x * digitBitSize) + digitBitSize), digitBitSize, align.getOrElse(Left))
+              Codec.decode(bts)(codec).require.value.asInstanceOf[Double].toByte
+            }
+            bte.toArray
+          }
+          case _ => { //bin
+            //            val bts = wordAlign(bits, digitBitSize, align.getOrElse(Left))
+            val bte = Codec.decode(bits)(codec).require.value.asInstanceOf[Double].toByte
+            (bte :: Nil).toArray
+          }
+        }
+        case None => { // display i.e. no comp
+          val bte = for (x <- 0 until scale) yield {
+            val bts = wordAlign(bits.slice(x * digitBitSize, (x * digitBitSize) + digitBitSize), digitBitSize, align.getOrElse(Left))
+            Codec.decode(bts)(codec).require.value.asInstanceOf[Double].toByte
+          }
+          bte.toArray
+        }
       }
-      b.toArray
+      case ebc: EBCDIC => comp match {
+        case Some(compact) => compact match {
+          case a if a == 3 => { //bcd
+            println("BCD")
+            val bte = for (x <- 0 until scale) yield {
+              val bts = wordAlign(bits.slice(x * digitBitSize, (x * digitBitSize) + digitBitSize), digitBitSize, align.getOrElse(Left))
+              //              println("bts : " + bts.toBin)
+              //              println("value : " + Codec.decode(bts)(codec).require.value.asInstanceOf[Number].doubleValue())
+              Codec.decode(bts)(codec).require.value.asInstanceOf[Number].doubleValue().toByte
+            }
+            bte.toArray
+          }
+          case _ => { //bin
+            //            val bts = wordAlign(bits, digitBitSize, align.getOrElse(Left))
+            val buf = ByteBuffer.allocate(8)
+            val decValue = Codec.decode(bits)(codec).require.value.asInstanceOf[Number].doubleValue()
+            val byteArr = buf.putDouble(decValue).array()
+            byteArr
+          }
+        }
+        case None => { // display i.e. no comp
+          val bte = for (x <- 0 until scale) yield {
+            val bts = wordAlign(bits.slice(x * digitBitSize, (x * digitBitSize) + digitBitSize), digitBitSize, align.getOrElse(Left))
+            Codec.decode(bts)(codec).require.value.asInstanceOf[Number].doubleValue().toByte
+          }
+          bte.toArray
+        }
+      }
     }
-    case _ => bits.toByteArray
+    bytes
   }
+
+  def charDecode(byteArr: Array[Byte], enc: Option[Encoding], comp: Option[Int]) = {
+    val ans = enc match {
+      case Some(ASCII()) => byteArr.map(byte => {
+        byte.toInt
+      })
+      case Some(EBCDIC()) =>
+        val finalStringVal = comp match {
+          case Some(compact) => {
+            val compValue = compact match {
+              case a if a == 3 => { //bcd
+                val digitString = for {
+                  idx <- byteArr.indices
+                } yield {
+                  if (idx == byteArr.length - 1) { //last byte is sign
+                    println("byteIF : " + byteArr(idx))
+                    byteArr(idx) match {
+                      case 0x0C => "+"
+                      case 0x0D => "-"
+                      case 0x0F => "+" //unsigned
+                      case _ => byteArr(idx).toString // No sign
+                    }
+                  }
+                  else {
+                    println("byteELSE : " + byteArr(idx))
+                    byteArr(idx).toString
+                  }
+                }
+                s"${digitString.last}${digitString.head}${digitString.tail.dropRight(1)}"
+              }
+              case _ => { //bin
+                val buf = ByteBuffer.wrap(byteArr)
+                buf.flip()
+                buf.getDouble.toString //returns number value as a string "1500"
+                //                buf.clear()
+              }
+            }
+            compValue
+          }
+          case None => {
+            val digitString = for {//display
+              idx <- byteArr.indices
+            } yield {
+              //byte => ebcidic character
+              if (idx == byteArr.length - 1) { //last byte is sign
+                val signByte = BitVector(byteArr(idx)).slice(0, 4).toByte(false)
+                val sign = signByte match {
+                  case 0x0C => "+"
+                  case 0x0D => "-"
+                  case 0x0F => "+" //unsigned
+                  case _ => byteArr(idx).toString // No sign
+                }
+                val lastDigit = BitVector(byteArr(idx)).slice(4, 9).toByte(false).toString
+                s"$lastDigit$sign" // to make display look like comp3
+              }
+              else {
+                BitVector(byteArr(idx)).slice(4, 9).toInt().toString
+              }
+            }
+            s"${digitString.last}${digitString.head}${digitString.tail.dropRight(1)}"
+          }
+        }
+        finalStringVal
+
+      case None => throw new Exception("No character set was defined for decoding")
+    }
+    ans.toString
+  }
+
+
   /**
-   *
-   * @param f
-   * @param schema : Avro schema
-   * @param forest : Forest of ASTs'
-   * @return
-   */
-  def rawDataParse(f: BitVector, schema: Schema, forest: Seq[Group]) = {
+    *
+    * @param f
+    * @param schema : Avro schema
+    * @param forest : Forest of ASTs'
+    * @return
+    */
+  def rawDataParse(f: BitVector, schema: Schema, forest: Seq[Group]): Seq[GenericData.Record] = {
     forest.map(tree => {
       val roots = tree.traverseAll
       val genRec = new GenericData.Record(schema)
       var fileIdx = 0
       roots.foldLeft(genRec)((genRecAcc, root) => {
+        //        println("CURRENT ROOT : " + root.camelCaseVar)
         root match {
           case x: Group => {
-            //          println("Group : " + x.camelCaseVar)
+            println("GROUP : " + x.camelCaseVar)
             if (x.level == 1) {
-              genRec
+              println("CURRENT SCHEMA FIELDS LEVEL 1 " + genRecAcc.getSchema.getFields)
+              genRecAcc
             } else {
-              val grpRec = new GenericData.Record(schema.getField(x.camelCaseVar).schema())
+              println("CURRENT SCHEMA FIELDS " + genRecAcc.getSchema.getFields)
+              val grpRec = new GenericData.Record(genRecAcc.getSchema.getField(x.camelCaseVar).schema())
               grpRec
             }
           }
           case y: Statement => {
-            //          println("Statement : " + y.camelCaseVar)
+            println("Statement : " + y.camelCaseVar)
             val value = y.dataType match {
-              case a: AlphaNumeric => { //todo: Here the hardcoded values need to be fetch from flat file, text encoding will determine actual value.
-                val codec = a.enc.getOrElse(ASCII()).codec[Int](Some(8))
+              case a: AlphaNumeric => { //each character is represented by a byte
+                val codec = a.enc.getOrElse(EBCDIC()).codec(None, a.length, None)
                 println("AlphaCodec : " + codec)
-                val bitCount = a.length * 8
-                val bits = f.slice(fileIdx, fileIdx + bitCount)
-                val range = codec match {
-                  case a if a.equals(uint8) => bits.size / 8
-                  case _ => bits.size / 8
-                }
-                val padded: Array[Byte] = decode(codec, range, bits)
-                val ans = a.enc match {
-                  case Some(ASCII()) => padded.map(byte => {
-                    byte.toInt
-                  })
-                  case Some(EBCDIC()) => padded.map(byte => {
-                    byte.toInt
-                  })
-                }
+                val bitCount = getBitCount(codec, None, a.length) //count of entire word
+                val bits = f.slice(fileIdx, fileIdx + bitCount) // cut out word form binary file
+                val padded: Array[Byte] = decode(codec, a.enc.getOrElse(EBCDIC()), a.length, bits, None, a.wordAlligned, None)
+                val ans = charDecode(padded, a.enc, None)
                 fileIdx = fileIdx + bitCount.toInt
-                //                println("value : " + ans.mkString("-"))
                 ans
               }
               case d: Decimal => {
                 println(y.dataType)
-                val codec = d.enc.getOrElse(ASCII()).codec[Int](d.compact)
+                val codec = d.enc.getOrElse(EBCDIC()).codec(d.compact, d.scale, d.signPosition)
                 println("DecCodec : " + codec)
-                val bitCount: Long = getBitCount(codec, d.scale, d.precision)
+                val bitCount = getBitCount(codec, d.compact, d.scale)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
-                val range = codec match {
-                  case a if a.equals(uint4) => bits.size / 4
-                  case _ => bits.size / 8
-                }
-                val padded: Array[Byte] = decode(codec, range, bits)
-                val ans = d.enc match {
-                  case Some(ASCII()) => padded.map(byte => {
-                    byte.toInt
-                  })
-                  case Some(EBCDIC()) => padded.map(byte => {
-                    byte.toInt
-                  })
-                }
+                val padded: Array[Byte] = decode(codec, d.enc.getOrElse(EBCDIC()), d.scale, bits, d.compact, d.wordAlligned, d.signPosition)
+                val ans = charDecode(padded, d.enc, d.compact)
                 fileIdx = fileIdx + bitCount.toInt
                 //                println("value : " + ans.mkString("-"))
                 ans
               }
               case i: Integer => {
                 println(y.dataType)
-                val codec = i.enc.getOrElse(ASCII()).codec[Int](i.compact)
+                val codec = i.enc.getOrElse(EBCDIC()).codec(i.compact, i.scale, i.signPosition)
                 println("IntCodec : " + codec)
-                val bitCount: Long = getBitCount(codec, i.scale)
+                val bitCount = getBitCount(codec, i.compact, i.scale)
+                println("bitCount : " + bitCount)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
-                val range = codec match {
-                  case a if codec.equals(uint4) => bits.size / 4
-                  case _ => bits.size / 8
-                }
-                val padded: Array[Byte] = decode(codec, range, bits)
-                val ans = i.enc match {
-                  case Some(ASCII()) => padded.map(byte => {
-                    byte.toInt
-                  })
-                  case Some(EBCDIC()) => padded.map(byte => {
-                    byte.toInt
-                  })
-                }
+                println("bits : " + bits.toBin)
+                val padded: Array[Byte] = decode(codec, i.enc.getOrElse(EBCDIC()), i.scale, bits, i.compact, i.wordAlligned, i.signPosition)
+                println("padded : " + padded.toList)
+                val ans = charDecode(padded, i.enc, i.compact)
                 fileIdx = fileIdx + bitCount.toInt
                 ans
               }
             }
-            genRecAcc.put(y.camelCaseVar, value.mkString(",")) // value is an array at this point. Textified the payload for readability
-            //            genRecAcc.put(y.camelCaseVar, value)
+            genRecAcc.put(y.camelCaseVar, value)
+            genRecAcc
+          }
+          case _ => {
+            println(Console.YELLOW + "NOT A GROUP OR STATEMENT" + Console.WHITE)
             genRecAcc
           }
         }

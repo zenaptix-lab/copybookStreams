@@ -126,7 +126,7 @@ class DataParserSpec extends WordSpec {
       println("Generic record : ")
       genRecBuilder.foreach({
         rec =>
-          println("newGenRec : " + rec.toString)
+          println(Console.CYAN + "newGenRec : " + rec.toString + Console.WHITE)
       })
     }
   }
