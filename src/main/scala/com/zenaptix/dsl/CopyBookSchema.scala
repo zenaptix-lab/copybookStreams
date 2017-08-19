@@ -970,7 +970,7 @@ object Files {
                     byteArr(idx).toString
                   }
                 }
-                s"${digitString.last}${digitString.head}${digitString.tail.dropRight(1)}"
+                s"${digitString.last}${digitString.head}${digitString.tail.dropRight(1).mkString("")}"
               }
               case _ => { //bin
                 val buf = ByteBuffer.wrap(byteArr)
@@ -1001,7 +1001,7 @@ object Files {
                 BitVector(byteArr(idx)).slice(4, 9).toInt().toString
               }
             }
-            s"${digitString.last}${digitString.head}${digitString.tail.dropRight(1)}"
+            s"${digitString.last}${digitString.head}${digitString.tail.dropRight(1).mkString("")}"
           }
         }
         finalStringVal
@@ -1023,9 +1023,11 @@ object Files {
     forest.map(tree => {
       val roots = tree.traverseAll
       val genRec = new GenericData.Record(schema)
+      var prevRec = genRec
+      println("ORIGINAL SCHEMA FIELDS " + genRec.getSchema.getFields)
       var fileIdx = 0
       roots.foldLeft(genRec)((genRecAcc, root) => {
-        //        println("CURRENT ROOT : " + root.camelCaseVar)
+        println("CURRENT ROOT : " + root.camelCaseVar)
         root match {
           case x: Group => {
             println("GROUP : " + x.camelCaseVar)
@@ -1033,8 +1035,10 @@ object Files {
               println("CURRENT SCHEMA FIELDS LEVEL 1 " + genRecAcc.getSchema.getFields)
               genRecAcc
             } else {
-              println("CURRENT SCHEMA FIELDS " + genRecAcc.getSchema.getFields)
+              println("OLD SCHEMA FIELDS " + genRecAcc.getSchema.getFields)
+              prevRec = genRecAcc
               val grpRec = new GenericData.Record(genRecAcc.getSchema.getField(x.camelCaseVar).schema())
+              println("NEW SCHEMA FIELDS : " + grpRec.getSchema.getFields)
               grpRec
             }
           }
@@ -1074,12 +1078,24 @@ object Files {
                 val padded: Array[Byte] = decode(codec, i.enc.getOrElse(EBCDIC()), i.scale, bits, i.compact, i.wordAlligned, i.signPosition)
                 println("padded : " + padded.toList)
                 val ans = charDecode(padded, i.enc, i.compact)
+                println("ANS : " + ans)
                 fileIdx = fileIdx + bitCount.toInt
                 ans
               }
             }
+
+            val currentFields = genRecAcc.getSchema.getFields
+            val currentField = genRecAcc.getSchema.getField(y.camelCaseVar)
+            val prevFields = prevRec.getSchema.getFields
             genRecAcc.put(y.camelCaseVar, value)
-            genRecAcc
+
+            //if next is a group then pass prev, otherwise pass current record
+            if (currentFields.indexOf(currentField) != (currentFields.toArray.length - 1) && currentFields.toArray.length > 1) {
+              genRecAcc
+            }
+            else {
+              prevRec
+            }
           }
           case _ => {
             println(Console.YELLOW + "NOT A GROUP OR STATEMENT" + Console.WHITE)
