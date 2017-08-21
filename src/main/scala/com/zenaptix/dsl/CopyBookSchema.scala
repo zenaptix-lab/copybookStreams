@@ -187,6 +187,7 @@ case class CopyBookSchema(cpyBook: String) {
     println(Console.GREEN + "FOREST : " + forest.mkString("\n") + Console.WHITE)
 
     forest.map { f =>
+      //      println("f : " + f)
       val root = Group(1, f.head._1._2,
         mutable.ArrayBuffer(),
         parent = None,
@@ -229,9 +230,15 @@ case class CopyBookSchema(cpyBook: String) {
                 )
           case i if i < q.level =>
             val u = q.up().get.up().get.asInstanceOf[Group]
+//            println("q.up().up()", u.camelCaseVar)
+            val uu = if (level == u.level) {
+              u.up().get.asInstanceOf[Group]
+            }
+            else u
+
             if (isLeaf) {
               val t = typeAndLengthFromString(keywords, f._2)(enc)
-              u.add(
+              uu.add(
                 Statement(
                   level,
                   name,
@@ -242,7 +249,7 @@ case class CopyBookSchema(cpyBook: String) {
                 )
               )
             } else {
-              u.add(
+              uu.add(
                 Group(
                   level,
                   name,
@@ -830,7 +837,12 @@ object Files {
   def createCaseClasses(roots: Seq[Group], packageName: String = "com.zenaptix.test") = {
     roots.foreach { root =>
       println(s"Creating case classes for root : ${root.name}")
-      val c = root.traverseGroups.map(g => g.asCaseClass)
+      val c = root.traverseGroups.map(g => {
+        println("group : " + g)
+        println("group.children " + g.children)
+        println("g.asCaseClass" + g.asCaseClass)
+        g.asCaseClass
+      })
       //        println("Case Classes : ")
       //        c.foreach(g => println(g))
       root.printToFile(new File(s"src/test/scala/${packageName.replace(".", "/")}/${root.camelCased}.scala")) { p =>
@@ -1036,6 +1048,9 @@ object Files {
               genRecAcc
             } else {
               println("OLD SCHEMA FIELDS " + genRecAcc.getSchema.getFields)
+              if(genRecAcc.getSchema.getField(x.camelCaseVar) == null){
+//                new GenericData.Record()
+              }
               prevRec = genRecAcc
               val grpRec = new GenericData.Record(genRecAcc.getSchema.getField(x.camelCaseVar).schema())
               println("NEW SCHEMA FIELDS : " + grpRec.getSchema.getFields)
@@ -1091,9 +1106,11 @@ object Files {
 
             //if next is a group then pass prev, otherwise pass current record
             if (currentFields.indexOf(currentField) != (currentFields.toArray.length - 1) && currentFields.toArray.length > 1) {
+              println("genRecAcc.getFields : " + genRecAcc.getSchema.getFields)
               genRecAcc
             }
             else {
+              println("prevRec.getFields : " + prevRec.getSchema.getFields)
               prevRec
             }
           }

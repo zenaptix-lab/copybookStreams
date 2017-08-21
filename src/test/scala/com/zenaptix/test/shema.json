@@ -1,0 +1,82 @@
+{
+  "type" : "record",
+  "name" : "Cqsf602w",
+  "namespace" : "com.zenaptix.test",
+  "fields" : [ {
+    "name" : "cqnf602wStlnCommonDtls",
+    "type" : {
+      "type" : "record",
+      "name" : "Cqnf602wStlnCommonDtls",
+      "fields" : [ {
+        "name" : "cqnf602wKey",
+        "type" : {
+          "type" : "record",
+          "name" : "Cqnf602wKey",
+          "fields" : [ {
+            "name" : "cqnf602wAcctNo",
+            "type" : "long"
+          } ]
+        }
+      }, {
+        "name" : "cqnf602wCifk",
+        "type" : {
+          "type" : "record",
+          "name" : "Cqnf602wCifk",
+          "fields" : [ {
+            "name" : "cqnf602wCifkey",
+            "type" : "string"
+          } ]
+        }
+      }, {
+        "name" : "cqnf602StudentLoanDtl",
+        "type" : {
+          "type" : "record",
+          "name" : "Cqnf602StudentLoanDtl",
+          "fields" : [ {
+            "name" : "stnof602",
+            "type" : "string"
+          }, {
+            "name" : "crsef602",
+            "type" : "string"
+          }, {
+            "name" : "normf602",
+            "type" : "long"
+          }, {
+            "name" : "instf602",
+            "type" : "long"
+          }, {
+            "name" : "acyrf602",
+            "type" : "long"
+          }, {
+            "name" : "rpdtf602",
+            "type" : "long"
+          }, {
+            "name" : "failf602",
+            "type" : "long"
+          }, {
+            "name" : "compf602",
+            "type" : "string"
+          }, {
+            "name" : "repyf602",
+            "type" : "string"
+          }, {
+            "name" : "adfnf602",
+            "type" : "string"
+          }, {
+            "name" : "fultf602",
+            "type" : "string"
+          }, {
+            "name" : "pgrdf602",
+            "type" : "string"
+          }, {
+            "name" : "finlf602",
+            "type" : "string"
+          }, {
+            "name" : "spare",
+            "type" : "string"
+          } ]
+        }
+      } ]
+    }
+  } ]
+}

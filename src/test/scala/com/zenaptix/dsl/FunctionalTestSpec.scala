@@ -4,7 +4,7 @@ import java.io.File
 
 import com.sksamuel.avro4s.AvroSchema
 import com.zenaptix.dsl.CopyBookResources.roots
-import com.zenaptix.test.{Cqsf602w, Svse258NoticeRecord}
+import com.zenaptix.test.Cqsf602w
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import org.scalatest.WordSpec
@@ -22,8 +22,18 @@ class FunctionalTestSpec extends WordSpec {
 
   //create tree
   val roots: Seq[Group] = CopyBookSchema(lines).parseTree(EBCDIC())
-  println(Console.YELLOW + "Roots :  " + roots.mkString("\n") + Console.WHITE)
 
+  roots.foreach { root =>
+    val t = root.traverseGroups
+    println(s"\n\nTRAVERSAL 1 {Groups}:\n ${t.mkString("\n")}")
+  }
+  roots.foreach { root =>
+    val t = root.traverseGroups
+    t.foreach({ grp =>
+      println("group : " + grp.camelCaseVar)
+      println("children : " + grp.children.toList)
+    })
+  }
   roots.foreach { root =>
     val t = root.traverseAll
     println(s"\n\nTRAVERSAL 2 {All}:\n ${t.mkString("\n")}")
@@ -39,12 +49,14 @@ class FunctionalTestSpec extends WordSpec {
 
   println(Console.GREEN + "parse raw data file to generic record" + Console.WHITE)
   val bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
-//  println(s"Bitvector of input file ${bytes.toBin}")
+  //  println(s"Bitvector of input file ${bytes.toBin}")
   val genRecBuilder: Seq[GenericData.Record] = Files.rawDataParse(bytes, schema, roots)
   println("Generic record : ")
-  genRecBuilder.head.toString
-//  genRecBuilder.foreach({
-//    rec =>
-//      println("newGenRec : " + rec.toString)
-//  })
+  //  genRecBuilder.head.toString
+  genRecBuilder.foreach({
+    rec =>
+      println(Console.YELLOW + "newGenRec : " + rec.toString + Console.WHITE)
+  })
+
 }
+
