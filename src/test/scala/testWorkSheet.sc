@@ -1,5 +1,7 @@
 import java.nio.ByteBuffer
 
+import com.gensler.scalavro.types.AvroType
+import com.zenaptix.test.Cqsf602w
 import scodec._
 import scodec.bits._
 import scodec.codecs._
@@ -55,5 +57,8 @@ theBestInt.toDouble
 val padded = List(0, 0, 0, 0, 3, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0)
 padded.indices
 padded.length
+
+val intSeqType = AvroType[Cqsf602w]
+
 
 

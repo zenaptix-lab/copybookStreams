@@ -7,7 +7,7 @@ scalaVersion := "2.11.8"
 
 organization in ThisBuild := "com.zenaptix"
 
-libraryDependencies ++= Seq (
+libraryDependencies ++= Seq(
   "com.sksamuel.avro4s" %% "avro4s-core" % "1.6.4",
   "com.sksamuel.avro4s" %% "avro4s-json" % "1.6.4",
   "com.sksamuel.avro4s" %% "avro4s-generator" % "1.6.0",
@@ -17,6 +17,7 @@ libraryDependencies ++= Seq (
   "org.scodec" % "scodec-bits_2.11" % "1.1.4",
   "org.scodec" % "scodec-core_2.11" % "1.10.3",
   "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
-  "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+  "org.scalatest" %% "scalatest" % "3.0.1" % "test",
+  "com.gensler" % "scalavro_2.10" % "0.6.2"
 )
         

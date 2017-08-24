@@ -56,6 +56,8 @@ class FunctionalTestSpec extends WordSpec {
   genRecBuilder.foreach({
     rec =>
       println(Console.YELLOW + "newGenRec : " + rec.toString + Console.WHITE)
+      println(Console.YELLOW + "newGenRecc.fields : " + rec.getSchema.getFields + Console.WHITE)
+      println(Console.YELLOW + "newGenRecc.schema : " + rec.getSchema.toString(true) + Console.WHITE)
   })
 
 }

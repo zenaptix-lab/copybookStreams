@@ -13,6 +13,7 @@ import scala.util.matching.Regex
 import scodec._
 import scodec.bits._
 import codecs._
+import com.sksamuel.avro4s.AvroSchema
 import shapeless.HNil
 
 /**
@@ -230,7 +231,7 @@ case class CopyBookSchema(cpyBook: String) {
                 )
           case i if i < q.level =>
             val u = q.up().get.up().get.asInstanceOf[Group]
-//            println("q.up().up()", u.camelCaseVar)
+            //            println("q.up().up()", u.camelCaseVar)
             val uu = if (level == u.level) {
               u.up().get.asInstanceOf[Group]
             }
@@ -1023,6 +1024,22 @@ object Files {
     ans.toString
   }
 
+  def getGenRec(origRec: GenericData.Record, root: CBTree): GenericData.Record = {
+    val fields = origRec.getSchema.getFields
+    val fieldsList = fields.toArray.toList.map(field => {
+      field.toString.split(" ").toList.head
+    })
+    if (fieldsList.contains(root.camelCaseVar)) {
+      new GenericData.Record(origRec.getSchema.getField(root.camelCaseVar).schema())
+    }
+    else {
+      val fieldsItr = fields.iterator()
+      while (fieldsItr.hasNext) {
+        getGenRec(new GenericData.Record(fieldsItr.next().schema()), root)
+      }
+      origRec
+    }
+  }
 
   /**
     *
@@ -1048,13 +1065,19 @@ object Files {
               genRecAcc
             } else {
               println("OLD SCHEMA FIELDS " + genRecAcc.getSchema.getFields)
-              if(genRecAcc.getSchema.getField(x.camelCaseVar) == null){
-//                new GenericData.Record()
+              if (genRecAcc.getSchema.getField(x.camelCaseVar) == null) {
+                println("root.parent : " + root.parent.get.camelCaseVar)
+                val parentRec = getGenRec(genRec, root)
+                println("GOT NEW SCHEMA")
+                println("parentSchema.fields : " + parentRec.getSchema.getFields)
+                parentRec
               }
-              prevRec = genRecAcc
-              val grpRec = new GenericData.Record(genRecAcc.getSchema.getField(x.camelCaseVar).schema())
-              println("NEW SCHEMA FIELDS : " + grpRec.getSchema.getFields)
-              grpRec
+              else {
+                prevRec = genRecAcc
+                val grpRec = new GenericData.Record(genRecAcc.getSchema.getField(x.camelCaseVar).schema())
+                println("NEW SCHEMA FIELDS : " + grpRec.getSchema.getFields)
+                grpRec
+              }
             }
           }
           case y: Statement => {
@@ -1103,6 +1126,7 @@ object Files {
             val currentField = genRecAcc.getSchema.getField(y.camelCaseVar)
             val prevFields = prevRec.getSchema.getFields
             genRecAcc.put(y.camelCaseVar, value)
+            println(Console.YELLOW +  "genRecAcc STATEMENTS : " + genRecAcc.toString + Console.WHITE)
 
             //if next is a group then pass prev, otherwise pass current record
             if (currentFields.indexOf(currentField) != (currentFields.toArray.length - 1) && currentFields.toArray.length > 1) {
@@ -1119,6 +1143,7 @@ object Files {
             genRecAcc
           }
         }
+        //put new schema into old schema
       })
     })
   }
