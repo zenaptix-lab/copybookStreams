@@ -1024,20 +1024,27 @@ object Files {
     ans.toString
   }
 
-  def getGenRec(origRec: GenericData.Record, root: CBTree): GenericData.Record = {
+  def getGenRec(origRec: GenericData.Record, root: CBTree,roots:Seq[CBTree]): GenericData.Record = {
     val fields = origRec.getSchema.getFields
+    println("FIELDS REC : " + fields)
     val fieldsList = fields.toArray.toList.map(field => {
       field.toString.split(" ").toList.head
     })
-    if (fieldsList.contains(root.camelCaseVar)) {
-      new GenericData.Record(origRec.getSchema.getField(root.camelCaseVar).schema())
+    println("fields List : " + fieldsList)
+    if(root == roots.head){
+      origRec
     }
     else {
-      val fieldsItr = fields.iterator()
-      while (fieldsItr.hasNext) {
-        getGenRec(new GenericData.Record(fieldsItr.next().schema()), root)
+      if (fieldsList.contains(root.camelCaseVar)) {
+        new GenericData.Record(origRec.getSchema.getField(root.camelCaseVar).schema())
       }
-      origRec
+      else {
+        val fieldsItr = fields.iterator()
+        while (fieldsItr.hasNext) {
+          getGenRec(new GenericData.Record(fieldsItr.next().schema()), root,roots)
+        }
+        origRec
+      }
     }
   }
 
@@ -1057,6 +1064,8 @@ object Files {
       var fileIdx = 0
       roots.foldLeft(genRec)((genRecAcc, root) => {
         println("CURRENT ROOT : " + root.camelCaseVar)
+        println(Console.MAGENTA + "genRecAcc.getSchema.getFields : " + genRecAcc.getSchema.getFields + Console.WHITE)
+        println(Console.MAGENTA + "prevRec.getSchema.getFields : " + prevRec.getSchema.getFields + Console.WHITE)
         root match {
           case x: Group => {
             println("GROUP : " + x.camelCaseVar)
@@ -1064,10 +1073,9 @@ object Files {
               println("CURRENT SCHEMA FIELDS LEVEL 1 " + genRecAcc.getSchema.getFields)
               genRecAcc
             } else {
-              println("OLD SCHEMA FIELDS " + genRecAcc.getSchema.getFields)
-              if (genRecAcc.getSchema.getField(x.camelCaseVar) == null) {
+              if (genRecAcc.getSchema.getField(x.camelCaseVar) == null) { //have to return previous genRec
                 println("root.parent : " + root.parent.get.camelCaseVar)
-                val parentRec = getGenRec(genRec, root)
+                val parentRec = getGenRec(genRec, root,roots)
                 println("GOT NEW SCHEMA")
                 println("parentSchema.fields : " + parentRec.getSchema.getFields)
                 parentRec
@@ -1126,7 +1134,7 @@ object Files {
             val currentField = genRecAcc.getSchema.getField(y.camelCaseVar)
             val prevFields = prevRec.getSchema.getFields
             genRecAcc.put(y.camelCaseVar, value)
-            println(Console.YELLOW +  "genRecAcc STATEMENTS : " + genRecAcc.toString + Console.WHITE)
+            println(Console.YELLOW + "genRecAcc STATEMENTS : " + genRecAcc.toString + Console.WHITE)
 
             //if next is a group then pass prev, otherwise pass current record
             if (currentFields.indexOf(currentField) != (currentFields.toArray.length - 1) && currentFields.toArray.length > 1) {
@@ -1134,7 +1142,14 @@ object Files {
               genRecAcc
             }
             else {
+              //              if() //if you are the last record then do not put
               println("prevRec.getFields : " + prevRec.getSchema.getFields)
+              println(" y.parent.getOrElse(y).parent.getOrElse(y.parent.getOrElse(y) " +  y.parent.getOrElse(y).parent.getOrElse(y.parent.getOrElse(y)))
+              val theRecord = getGenRec(genRec, y.parent.getOrElse(y).parent.getOrElse(y.parent.getOrElse(y)),roots)
+              println("theRecord.getFields : " + theRecord.getSchema.getFields)
+              println("put : " + y.parent)
+              theRecord.put(y.parent.getOrElse(y).camelCaseVar, genRecAcc)
+              //              prevRec.put(y.parent.getOrElse(y).camelCaseVar,genRecAcc)
               prevRec
             }
           }
