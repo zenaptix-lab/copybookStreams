@@ -1142,7 +1142,6 @@ object Files {
               genRecAcc
             }
             else {
-              //              if() //if you are the last record then do not put
               println("prevRec.getFields : " + prevRec.getSchema.getFields)
               println(" y.parent.getOrElse(y).parent.getOrElse(y.parent.getOrElse(y) " +  y.parent.getOrElse(y).parent.getOrElse(y.parent.getOrElse(y)))
               val theRecord = getGenRec(genRec, y.parent.getOrElse(y).parent.getOrElse(y.parent.getOrElse(y)),roots)
@@ -1150,7 +1149,18 @@ object Files {
               println("put : " + y.parent)
               theRecord.put(y.parent.getOrElse(y).camelCaseVar, genRecAcc)
               //              prevRec.put(y.parent.getOrElse(y).camelCaseVar,genRecAcc)
-              prevRec
+              println("theRecord.getSchema.getFields " + theRecord.getSchema.getFields)
+              println(theRecord.getSchema.toString(true))
+
+              if(root == roots.last) { //leaf
+               println("LAST !!!")
+                theRecord
+              }
+              else{
+                println("NOT LAST YET")
+                prevRec
+              }
+//              prevRec
             }
           }
           case _ => {
