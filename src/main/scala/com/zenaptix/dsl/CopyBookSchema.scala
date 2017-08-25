@@ -1024,14 +1024,14 @@ object Files {
     ans.toString
   }
 
-  def getGenRec(origRec: GenericData.Record, root: CBTree,roots:Seq[CBTree]): GenericData.Record = {
+  def getGenRec(origRec: GenericData.Record, root: CBTree, roots: Seq[CBTree]): GenericData.Record = {
     val fields = origRec.getSchema.getFields
     println("FIELDS REC : " + fields)
     val fieldsList = fields.toArray.toList.map(field => {
       field.toString.split(" ").toList.head
     })
     println("fields List : " + fieldsList)
-    if(root == roots.head){
+    if (root == roots.head) {
       origRec
     }
     else {
@@ -1041,7 +1041,7 @@ object Files {
       else {
         val fieldsItr = fields.iterator()
         while (fieldsItr.hasNext) {
-          getGenRec(new GenericData.Record(fieldsItr.next().schema()), root,roots)
+          getGenRec(new GenericData.Record(fieldsItr.next().schema()), root, roots)
         }
         origRec
       }
@@ -1057,6 +1057,7 @@ object Files {
     */
   def rawDataParse(f: BitVector, schema: Schema, forest: Seq[Group]): Seq[GenericData.Record] = {
     forest.map(tree => {
+      var ansList = List.empty[Any]
       val roots = tree.traverseAll
       val genRec = new GenericData.Record(schema)
       var prevRec = genRec
@@ -1075,7 +1076,7 @@ object Files {
             } else {
               if (genRecAcc.getSchema.getField(x.camelCaseVar) == null) { //have to return previous genRec
                 println("root.parent : " + root.parent.get.camelCaseVar)
-                val parentRec = getGenRec(genRec, root,roots)
+                val parentRec = getGenRec(genRec, root, roots)
                 println("GOT NEW SCHEMA")
                 println("parentSchema.fields : " + parentRec.getSchema.getFields)
                 parentRec
@@ -1133,6 +1134,9 @@ object Files {
             val currentFields = genRecAcc.getSchema.getFields
             val currentField = genRecAcc.getSchema.getField(y.camelCaseVar)
             val prevFields = prevRec.getSchema.getFields
+
+            ansList = ansList ::: value :: Nil
+            println("ANSLIST " + ansList)
             genRecAcc.put(y.camelCaseVar, value)
             println(Console.YELLOW + "genRecAcc STATEMENTS : " + genRecAcc.toString + Console.WHITE)
 
@@ -1143,8 +1147,8 @@ object Files {
             }
             else {
               println("prevRec.getFields : " + prevRec.getSchema.getFields)
-              println(" y.parent.getOrElse(y).parent.getOrElse(y.parent.getOrElse(y) " +  y.parent.getOrElse(y).parent.getOrElse(y.parent.getOrElse(y)))
-              val theRecord = getGenRec(genRec, y.parent.getOrElse(y).parent.getOrElse(y.parent.getOrElse(y)),roots)
+              println(" y.parent.getOrElse(y).parent.getOrElse(y.parent.getOrElse(y) " + y.parent.getOrElse(y).parent.getOrElse(y.parent.getOrElse(y)))
+              val theRecord = getGenRec(genRec, y.parent.getOrElse(y).parent.getOrElse(y.parent.getOrElse(y)), roots)
               println("theRecord.getFields : " + theRecord.getSchema.getFields)
               println("put : " + y.parent)
               theRecord.put(y.parent.getOrElse(y).camelCaseVar, genRecAcc)
@@ -1152,15 +1156,15 @@ object Files {
               println("theRecord.getSchema.getFields " + theRecord.getSchema.getFields)
               println(theRecord.getSchema.toString(true))
 
-              if(root == roots.last) { //leaf
-               println("LAST !!!")
+              if (root == roots.last) { //leaf
+                println("LAST !!!")
                 theRecord
               }
-              else{
+              else {
                 println("NOT LAST YET")
                 prevRec
               }
-//              prevRec
+              //              prevRec
             }
           }
           case _ => {
@@ -1169,6 +1173,64 @@ object Files {
           }
         }
         //put new schema into old schema
+      })
+    })
+  }
+
+  def rawDataList(f: BitVector, schema: Schema, forest: Seq[Group]): Seq[Seq[Any]] = {
+    println(forest.toList)
+    forest.map(tree => {
+      println("TREE : " + tree.camelCaseVar)
+      val roots = tree.traverseAll
+      var fileIdx = 0
+      roots.map(root => {
+        root match {
+          case y: Statement => {
+            y.dataType match {
+              case a: AlphaNumeric => { //each character is represented by a byte
+                val codec = a.enc.getOrElse(EBCDIC()).codec(None, a.length, None)
+                println("AlphaCodec : " + codec)
+                val bitCount = getBitCount(codec, None, a.length) //count of entire word
+                val bits = f.slice(fileIdx, fileIdx + bitCount) // cut out word form binary file
+                val padded: Array[Byte] = decode(codec, a.enc.getOrElse(EBCDIC()), a.length, bits, None, a.wordAlligned, None)
+                val ans = charDecode(padded, a.enc, None)
+                fileIdx = fileIdx + bitCount.toInt
+                ans
+              }
+              case d: Decimal => {
+                println(y.dataType)
+                val codec = d.enc.getOrElse(EBCDIC()).codec(d.compact, d.scale, d.signPosition)
+                println("DecCodec : " + codec)
+                val bitCount = getBitCount(codec, d.compact, d.scale)
+                val bits = f.slice(fileIdx, fileIdx + bitCount)
+                val padded: Array[Byte] = decode(codec, d.enc.getOrElse(EBCDIC()), d.scale, bits, d.compact, d.wordAlligned, d.signPosition)
+                val ans = charDecode(padded, d.enc, d.compact)
+                fileIdx = fileIdx + bitCount.toInt
+                //                println("value : " + ans.mkString("-"))
+                ans
+              }
+              case i: Integer => {
+                println(y.dataType)
+                val codec = i.enc.getOrElse(EBCDIC()).codec(i.compact, i.scale, i.signPosition)
+                println("IntCodec : " + codec)
+                val bitCount = getBitCount(codec, i.compact, i.scale)
+                println("bitCount : " + bitCount)
+                val bits = f.slice(fileIdx, fileIdx + bitCount)
+                println("bits : " + bits.toBin)
+                val padded: Array[Byte] = decode(codec, i.enc.getOrElse(EBCDIC()), i.scale, bits, i.compact, i.wordAlligned, i.signPosition)
+                println("padded : " + padded.toList)
+                val ans = charDecode(padded, i.enc, i.compact)
+                println("ANS : " + ans)
+                fileIdx = fileIdx + bitCount.toInt
+                ans
+              }
+            }
+          }
+          case _ => {
+            println("group")
+            Nil
+          }
+        }
       })
     })
   }

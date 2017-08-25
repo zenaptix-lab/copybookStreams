@@ -50,15 +50,22 @@ class FunctionalTestSpec extends WordSpec {
   println(Console.GREEN + "parse raw data file to generic record" + Console.WHITE)
   val bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
   //  println(s"Bitvector of input file ${bytes.toBin}")
-  val genRecBuilder: Seq[GenericData.Record] = Files.rawDataParse(bytes, schema, roots)
-  println("Generic record : ")
-  //  genRecBuilder.head.toString
-  genRecBuilder.foreach({
-    rec =>
-      println(Console.CYAN + "newGenRec : " + rec.toString + Console.WHITE)
-      println(Console.YELLOW + "newGenRecc.fields : " + rec.getSchema.getFields + Console.WHITE)
-      println(Console.YELLOW + "newGenRecc.schema : " + rec.getSchema.toString(true) + Console.WHITE)
-  })
+  println("roots : " + roots.toList)
+  val genRecValues = Files.rawDataList(bytes, schema, roots)
+//  genRecValues.foreach(lst => println(lst.mkString(" | ")))
+  println("GENREC values : " + genRecValues.head.toList)
+  println("GENREC LENGTH : " + genRecValues.toList.head.length)
+  //recursive add to generic record
+
+//  val genRecBuilder: Seq[GenericData.Record] = Files.rawDataParse(bytes, schema, roots)
+//  println("Generic record : ")
+//  //  genRecBuilder.head.toString
+//  genRecBuilder.foreach({
+//    rec =>
+//      println(Console.CYAN + "newGenRec : " + rec.toString + Console.WHITE)
+//      println(Console.YELLOW + "newGenRecc.fields : " + rec.getSchema.getFields + Console.WHITE)
+//      println(Console.YELLOW + "newGenRecc.schema : " + rec.getSchema.toString(true) + Console.WHITE)
+//  })
 
 }
 

@@ -1,12 +1,16 @@
 import java.nio.ByteBuffer
 
 import com.gensler.scalavro.types.AvroType
+import com.sksamuel.avro4s.AvroSchema
+import com.zenaptix.dsl.{CopyBookSchema, EBCDIC, Files, Group}
 import com.zenaptix.test.Cqsf602w
 import scodec._
 import scodec.bits._
 import scodec.codecs._
 import shapeless.HNil
 import scodec.codecs.implicits._
+
+import scala.io.{BufferedSource, Source}
 
 val bte = 123.toBinaryString
 val bitVec = BitVector(0x7B) //123
@@ -58,7 +62,19 @@ val padded = List(0, 0, 0, 0, 3, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0)
 padded.indices
 padded.length
 
-val intSeqType = AvroType[Cqsf602w]
+val schema = AvroSchema[Cqsf602w]
+val source: BufferedSource = Source.fromFile("/home/rikus/Downloads/mainframe_test/CQSF602.txt")
+
+val lines: String = try source.getLines().mkString("\n") finally source.close()
+val roots: Seq[Group] = CopyBookSchema(lines).parseTree(EBCDIC())
+
+val bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
+//  println(s"Bitvector of input file ${bytes.toBin}")
+println("roots : " + roots.toList)
+val genRecValues = Files.rawDataList(bytes, schema, roots)
+//  genRecValues.foreach(lst => println(lst.mkString(" | ")))
+println("GENREC values : " + genRecValues.head.toList)
+println("GENREC LENGTH : " + genRecValues.toList.head.length)
 
 
 
