@@ -1,4 +1,4 @@
-import com.sksamuel.avro4s.AvroSchema
+import com.sksamuel.avro4s.{AvroSchema, RecordFormat}
 import com.zenaptix.dsl._
 import com.zenaptix.dsl.Files._
 import com.zenaptix.test.Cqsf602w
@@ -55,15 +55,27 @@ def recursiveBuilder(root: CBTree, roots: Seq[CBTree], origRec: GenericData.Reco
           println("ERROR : " + e)
           println("else return " + origRec.getSchema.getName)
           println("Put " + fieldName + " IN " + origRec.getSchema.getName)
-          origRec.put(fieldName, values.next())
+          val fieldVal = values.next() match {
+            case h::HNil => h
+            case _ => println("&&&!!!!!")
+          }
+          println("FIELD VAL !!!! : " + fieldVal.toString)
+          origRec.put(fieldName, fieldVal)
           println("origRec put : " + origRec.toString)
       }
+      println("group put " + fieldName + " IN " + origRec.getSchema.getName)
+     origRec.put(fieldName,childField)
     })
     origRec
   }
   else {
     println("Put " + root.camelCaseVar + " IN " + origRec.getSchema.getName)
-    origRec.put(root.camelCaseVar, values.next())
+    val fieldVal = values.next() match {
+      case h::HNil => h
+      case _ => println("&&&!!!!!")
+    }
+    println("FIELD VAL !!!! ELSE : " + fieldVal.toString)
+    origRec.put(root.camelCaseVar, fieldVal)
     println("origRec put ELSE : " + origRec.toString)
     origRec
   }
@@ -71,6 +83,7 @@ def recursiveBuilder(root: CBTree, roots: Seq[CBTree], origRec: GenericData.Reco
 val root = roots.head
 val finalRec = recursiveBuilder(root, roots, origRec, genRecVal.toIterator)
 println(finalRec.toString)
+//println(finalRec.getSchema.toString(true))
 //forest.foreach(tree => {
 //  val roots = tree.traverseAll
 //  roots.foreach(root => {
