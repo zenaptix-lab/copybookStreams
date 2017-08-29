@@ -18,6 +18,8 @@ libraryDependencies ++= Seq(
   "org.scodec" % "scodec-core_2.11" % "1.10.3",
   "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
-  "com.gensler" % "scalavro_2.10" % "0.6.2"
+  "com.gensler" % "scalavro_2.10" % "0.6.2",
+  "com.chuusai" %% "shapeless" % "2.3.2"
+
 )
         

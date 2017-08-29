@@ -122,12 +122,12 @@ class DataParserSpec extends WordSpec {
       val parsed = new Schema.Parser().parse(new File("src/test/resources/Svse258NoticeRecord.avsc"))
       val bytes = Files.copyBytes("src/test/resources/test_dump_bin")
       println(s"Bitvector of input file ${bytes.toBin}")
-      val genRecBuilder = Files.rawDataParse(bytes, parsed, roots)
+//      val genRecBuilder = Files.rawDataParse(bytes, parsed, roots)
       println("Generic record : ")
-      genRecBuilder.foreach({
-        rec =>
-          println(Console.CYAN + "newGenRec : " + rec.toString + Console.WHITE)
-      })
+//      genRecBuilder.foreach({
+//        rec =>
+//          println(Console.CYAN + "newGenRec : " + rec.toString + Console.WHITE)
+//      })
     }
   }
 
