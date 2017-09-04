@@ -22,6 +22,8 @@ class DataParserSpec extends WordSpec {
     "create AVRO schema from AST" in {
       println(Console.GREEN + "create AVRO schema from AST" + Console.WHITE)
 
+      println(s"\n\nTRAVERSAL 2 {All}:\n ${roots.head.traverseAll.mkString("\n")}")
+
       roots.foreach {
         root =>
           val schema = AvroSchema[Svse258NoticeRecord]
@@ -88,6 +90,8 @@ class DataParserSpec extends WordSpec {
       genRec.put("svse258NoticeDetail", genRec2)
 
       println(Console.CYAN + "GENREC : " + genRec.toString + Console.WHITE)
+//      println(genRec.get("svse258UpfPnltAmnt"))
+      println(genRec2.get("svse258UpfPnltAmnt"))
 
       val datumWriter = new GenericDatumWriter[GenericRecord](parsed)
       val dataFileWriter = new DataFileWriter[GenericRecord](datumWriter)

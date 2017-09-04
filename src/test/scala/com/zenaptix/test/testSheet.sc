@@ -65,22 +65,24 @@ def recursiveBuilder(root: CBTree, roots: Seq[CBTree], origRec: GenericData.Reco
     field.toString.split(" ").toList.head
   })
   println("fields List : " + fieldsList)
+  var newRec = origRec
   if (fields.size() > 0) { //root has child
     fieldsList.foreach(fieldName => {
+      println("FOR EACH CHILD FIELD : " + fieldName)
       val childField = origRec.getSchema.getField(fieldName)
-      println("origRec.getSchema.getField(fieldName): " + childField)
-      println("origRec.getSchema.getField(fieldName).schema : " + childField.schema())
+      println("origRec.getSchema.getField(fieldName)/childField " + childField)
+      println("origRec.getSchema.getField(fieldName).schema/childField.schema : " + childField.schema())
       //      println("origRec.fields : " + childField.schema().getFields)
       val isLeaf = Try {
         childField.schema().getFields
       } match {
         case Success(ans) =>
           val newFieldRec = new GenericData.Record(childField.schema())
-          recursiveBuilder(root, roots, newFieldRec, values)
+          newRec = recursiveBuilder(root, roots, newFieldRec, values)
           false
         case Failure(e) =>
           println("ERROR : " + e)
-          println("else return " + origRec.getSchema.getName)
+          println("else origRec.getSchema.getName " + origRec.getSchema.getName)
           println("Put " + fieldName + " IN " + origRec.getSchema.getName)
           val fieldVal = values.next() match {
             case h :: HNil => h
@@ -95,10 +97,16 @@ def recursiveBuilder(root: CBTree, roots: Seq[CBTree], origRec: GenericData.Reco
       // if the current root is a leaf(i.e. no children) then dont do group put
       if(!isLeaf){
         println("group put " + fieldName + " IN " + origRec.getSchema.getName)
-        origRec.put(fieldName, childField)
+        println(s"origRec.put &&&& (${fieldName} , ${childField.toString})")
+//        origRec.put(fieldName, childField)
+//        origRec.put(fieldName, new GenericData.Record(childField.schema()))
+        println("NEW REC :  " + newRec.toString)
+//        origRec.put(fieldName, new GenericData.Record(origRec.getSchema.getField(fieldName).schema()))
+        origRec.put(fieldName, newRec)
         println("origRec put : " + origRec.toString)
       }
     })
+    println("origRec IF before exit" + origRec.toString)
     origRec
   }
   else {
@@ -118,7 +126,6 @@ def recursiveBuilder(root: CBTree, roots: Seq[CBTree], origRec: GenericData.Reco
 val root = roots.head
 val finalRec = recursiveBuilder(root, roots, origRec, genRecVal.toIterator)
 println(finalRec.toString)
-val a = finalRec.get(0)
 //val format = RecordFormat[Cqsf602w]
 //val newCaseClass = format.from(finalRec)
 //println(finalRec.getSchema.toString(true))
