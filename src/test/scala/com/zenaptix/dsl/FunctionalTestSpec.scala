@@ -49,11 +49,11 @@ class FunctionalTestSpec extends WordSpec {
   println(schema.toString(true))
   println(schema.getFields)
 
-  println(Console.GREEN + "parse raw data file to generic record" + Console.WHITE)
+  println(Console.GREEN + "parse raw data file to an HList of values" + Console.WHITE)
   val bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
   //  println(s"Bitvector of input file ${bytes.toBin}")
   println("roots : " + roots.toList)
-  val genRecValues = Files.rawDataList(bytes, schema, forest)
+  val genRecValues: Seq[List[HList]] = Files.rawDataList(bytes, schema, forest)
   //  genRecValues.foreach(lst => println(lst.mkString(" | ")))
   println("GENREC values : " + genRecValues.head)
   genRecValues.head.foreach({
@@ -61,42 +61,18 @@ class FunctionalTestSpec extends WordSpec {
     case _ => println("not anything")
   })
 
-  def genRecBuilder(recValues: Seq[List[HList]], forest: Seq[Group], schema: Schema) = {
-    val origRec = new GenericData.Record(schema)
-    forest.map(tree => {
-      val roots = tree.traverseAll
-      val rootsItr = roots.toIterator
-      var root = rootsItr.next()
-      recValues.head.map(recValue => { //foreach record value
-        val reqRec = getGenRec(origRec, root, roots).getOrElse(origRec)
-        println("ROOT " + root.camelCaseVar)
-        println("REQREC : " + reqRec.getSchema.getFields)
-        if (rootsItr.hasNext) {
-          println(Console.YELLOW + "GENRECBUILDER ROOT " + root + Console.WHITE)
-          println("reqRec : " + reqRec.getSchema.getName)
-          println("reqRec Fields: " + reqRec.getSchema.getFields)
-          recValue match {
-            case head :: HNil => {
-              println(s"head : ${head.getClass.toString} ${head.toString}")
-              reqRec.put(root.camelCaseVar, head)
-            }
-            case _ => {
-              println("not anything")
-            }
-          }
-          root = rootsItr.next()
-          reqRec
-        }
-        else{
-          reqRec
-        }
-      })
-    })
-  }
+  println(Console.GREEN + "create a generic record from case class" + Console.WHITE)
+  val origRec = new GenericData.Record(schema)
+  println("origRec fields : " + origRec.getSchema.getFields)
 
-  val completeRec = genRecBuilder(genRecValues, forest, schema)
-  completeRec.head.toString
-  //recursive add to generic record
+  val genRecVal: List[HList] = genRecValues.head.filter(hlst => hlst match {
+    case head :: HNil => true
+    case _ => false
+  })
+
+  println(Console.GREEN + "append decoded values to generic record" + Console.WHITE)
+  val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
+  println(finalRec.toString)
 
 }
 
