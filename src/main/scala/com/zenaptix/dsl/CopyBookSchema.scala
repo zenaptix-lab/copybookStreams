@@ -896,7 +896,7 @@ object Files {
     comp match {
       case Some(x) => {
         x match {
-          case a if a == 3 => scale * codec.sizeBound.lowerBound.toInt //bcd
+          case a if a == 3 => (scale + 1) * codec.sizeBound.lowerBound.toInt //bcd
           case _ => codec.sizeBound.lowerBound.toInt // bin/float/floatL
         }
       }
@@ -934,9 +934,11 @@ object Files {
         case Some(compact) => compact match {
           case a if a == 3 => { //bcd
             println("BCD")
-            val bte = for (x <- 0 until scale) yield {
+            println("bits : " + bits)
+            val bte = for (x <- 0 to scale) yield {
               val bts = wordAlign(bits.slice(x * digitBitSize, (x * digitBitSize) + digitBitSize), digitBitSize, align.getOrElse(Left))
               //              println("bts : " + bts.toBin)
+              //              println("codec : " + codec)
               //              println("value : " + Codec.decode(bts)(codec).require.value.asInstanceOf[Number].doubleValue())
               Codec.decode(bts)(codec).require.value.asInstanceOf[Number].doubleValue().toByte
             }
@@ -953,6 +955,7 @@ object Files {
         case None => { // display i.e. no comp
           val bte = for (x <- 0 until scale) yield {
             val bts = wordAlign(bits.slice(x * digitBitSize, (x * digitBitSize) + digitBitSize), digitBitSize, align.getOrElse(Left))
+            println("bts : " + bts.toBin)
             Codec.decode(bts)(codec).require.value.asInstanceOf[Number].doubleValue().toByte
           }
           bte.toArray
@@ -989,6 +992,7 @@ object Files {
                     byteArr(idx).toString
                   }
                 }
+                println("digitString : " + digitString)
                 s"${digitString.last}${digitString.head}${digitString.tail.dropRight(1).mkString("")}"
               }
               case _ => { //bin
@@ -1000,27 +1004,54 @@ object Files {
             }
             compValue
           }
-          case None => {
-            val digitString = for {//display
+          case None => {//display
+            val digitString = for {
               idx <- byteArr.indices
             } yield {
               //byte => ebcidic character
-              if (idx == byteArr.length - 1) { //last byte is sign
-                val signByte = BitVector(byteArr(idx)).slice(0, 4).toByte(false)
-                val sign = signByte match {
-                  case 0x0C => "+"
-                  case 0x0D => "-"
-                  case 0x0F => "+" //unsigned
-                  case _ => byteArr(idx).toString // No sign
-                }
-                val lastDigit = BitVector(byteArr(idx)).slice(4, 9).toByte(false).toString
-                s"$lastDigit$sign" // to make display look like comp3
+              val cobolChar = byteArr(idx).toInt match { //change hex to int
+                case -63 => "A"
+                case -62 => "B"
+                case -61 => "C"
+                case -60 => "D"
+                case -59 => "E"
+                case -58 => "F"
+                case -57 => "G"
+                case -56 => "H"
+                case -55 => "I"
+                case -46 => "J"
+                case -45 => "K"
+                case -44 => "L"
+                case 0xD4 => "M"
+                case -43 => "N"
+                case 0xD6 => "O"
+                case 0xD7 => "P"
+                case 0xD8 => "Q"
+                case 0xD9 => "R"
+                case 0xE2 => "S"
+                case 0xE3 => "T"
+                case 0xE4 => "U"
+                case 0xE5 => "V"
+                case 0xE6 => "W"
+                case 0xE7 => "X"
+                case 0xE8 => "Y"
+                case 0xE9 => "Z"
+                case 0xF0 => "0"
+                case 0xF1 => "1"
+                case 0xF2 => "2"
+                case 0xF3 => "3"
+                case 0xF4 => "4"
+                case 0xF5 => "5"
+                case 0xF6 => "6"
+                case 0xF7 => "7"
+                case 0xF8 => "8"
+                case 0xF9 => "9"
+                case _ => "&"
               }
-              else {
-                BitVector(byteArr(idx)).slice(4, 9).toInt().toString
-              }
+              cobolChar
             }
-            s"${digitString.last}${digitString.head}${digitString.tail.dropRight(1).mkString("")}"
+            digitString
+//            s"${digitString.last}${digitString.head}${digitString.tail.dropRight(1).mkString("")}"
           }
         }
         finalStringVal
@@ -1029,12 +1060,14 @@ object Files {
     }
     ans.toString
   }
+
   def getScalaType(typeString: String) = {
     typeString match {
       case "string" => Class.forName(s"java.lang.${typeString.capitalize}")
       case _ => Class.forName(s"scala.${typeString.capitalize}")
     }
   }
+
   def stringToTypeTag[A](name: String): TypeTag[A] = {
     val c = name match {
       case "string" => Class.forName(s"java.lang.${name.capitalize}")
@@ -1050,6 +1083,7 @@ object Files {
         else throw new IllegalArgumentException(s"Type tag defined in $mirror cannot be migrated to other mirrors.")
     })
   }
+
   def cast[A](a: Any, tt: TypeTag[A]): A = a.asInstanceOf[A]
 
 
@@ -1084,11 +1118,11 @@ object Files {
             }
             val fieldType = origRec.getSchema.getField(fieldName).schema().getType
             val stringToType = stringToTypeTag(fieldType.getName)
-            origRec.put(fieldName, cast(fieldVal,stringToType))
+            origRec.put(fieldName, cast(fieldVal, stringToType))
             println("origRec put : " + origRec.toString)
             true
         }
-        if(!isLeaf){
+        if (!isLeaf) {
           println("group put " + fieldName + " IN " + origRec.getSchema.getName)
           println(s"origRec.put &&&& (${fieldName} , ${childField.toString})")
           println("NEW REC :  " + newRec.toString)
@@ -1108,11 +1142,12 @@ object Files {
       val fieldType = origRec.getSchema.getField(root.camelCaseVar).schema().getType
       val stringToType = stringToTypeTag(fieldType.getName)
       println("FIELD VAL !!!! ELSE : " + fieldVal.toString)
-      origRec.put(root.camelCaseVar, cast(fieldVal,stringToType))
+      origRec.put(root.camelCaseVar, cast(fieldVal, stringToType))
       println("origRec put ELSE : " + origRec.toString)
       origRec
     }
   }
+
   //  def genRecBuilder(decodedData:Seq[Seq[Any]]) = {
   //    decodedData.foreach(item => {
   //        case h::t => ???
@@ -1120,12 +1155,12 @@ object Files {
   //      }
   //    )
   //  }
-  def rawDataList(f: BitVector, schema: Schema, forest: Seq[Group]): Seq[List[HList]] = {
+  def rawDataList(fileOffset: Int, f: BitVector, schema: Schema, forest: Seq[Group]): Seq[List[HList]] = {
     println(forest.toList)
     forest.map(tree => {
       println("TREE : " + tree.camelCaseVar)
       val roots: Seq[CBTree] = tree.traverseAll
-      var fileIdx = 0
+      var fileIdx = fileOffset
       roots.map(root => {
         root match {
           case y: Statement => {
@@ -1135,9 +1170,13 @@ object Files {
                 val codec = a.enc.getOrElse(EBCDIC()).codec(None, a.length, None)
                 println("AlphaCodec : " + codec)
                 val bitCount = getBitCount(codec, None, a.length) //count of entire word
+                println("bitCount : " + bitCount)
                 val bits = f.slice(fileIdx, fileIdx + bitCount) // cut out word form binary file
+                println("bits : " + bits.toBin)
                 val padded: Array[Byte] = decode(codec, a.enc.getOrElse(EBCDIC()), a.length, bits, None, a.wordAlligned, None)
+                println("padded : " + padded.toList)
                 val ans = charDecode(padded, a.enc, None)
+                println("ANS : " + ans)
                 fileIdx = fileIdx + bitCount.toInt
                 ans :: HNil
               }
@@ -1158,13 +1197,13 @@ object Files {
                 val codec = i.enc.getOrElse(EBCDIC()).codec(i.compact, i.scale, i.signPosition)
                 println("IntCodec : " + codec)
                 val bitCount = getBitCount(codec, i.compact, i.scale)
-                //                println("bitCount : " + bitCount)
+                println("bitCount : " + bitCount)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
-                //                println("bits : " + bits.toBin)
+                println("bits : " + bits.toBin)
                 val padded: Array[Byte] = decode(codec, i.enc.getOrElse(EBCDIC()), i.scale, bits, i.compact, i.wordAlligned, i.signPosition)
-                //                println("padded : " + padded.toList)
+                println("padded : " + padded.toList)
                 val ans = charDecode(padded, i.enc, i.compact)
-                //                println("ANS : " + ans)
+                println("ANS : " + ans)
                 fileIdx = fileIdx + bitCount.toInt
                 ans.toDouble :: HNil
               }

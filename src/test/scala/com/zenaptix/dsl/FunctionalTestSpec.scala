@@ -75,7 +75,7 @@ class FunctionalTestSpec extends WordSpec {
       val bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
       //  println(s"Bitvector of input file ${bytes.toBin}")
       println("roots : " + roots.toList)
-      val genRecValues: Seq[List[HList]] = Files.rawDataList(bytes, schema, forest)
+      val genRecValues: Seq[List[HList]] = Files.rawDataList(32,bytes, schema, forest)
       //  genRecValues.foreach(lst => println(lst.mkString(" | ")))
       println("GENREC values : " + genRecValues.head)
       genRecValues.head.foreach({
@@ -87,7 +87,7 @@ class FunctionalTestSpec extends WordSpec {
     "Create a generic record from case class" in {
       val bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
       val schema: Schema = AvroSchema[Cqsf602w]
-      val genRecValues: Seq[List[HList]] = Files.rawDataList(bytes, schema, forest)
+      val genRecValues: Seq[List[HList]] = Files.rawDataList(32,bytes, schema, forest)
       val origRec = new GenericData.Record(schema)
       println("origRec fields : " + origRec.getSchema.getFields)
 
@@ -101,7 +101,7 @@ class FunctionalTestSpec extends WordSpec {
       val bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
       val schema: Schema = AvroSchema[Cqsf602w]
       val origRec = new GenericData.Record(schema)
-      val genRecValues: Seq[List[HList]] = Files.rawDataList(bytes, schema, forest)
+      val genRecValues: Seq[List[HList]] = Files.rawDataList(32,bytes, schema, forest)
       println("origRec fields : " + origRec.getSchema.getFields)
 
       val genRecVal: List[HList] = genRecValues.head.filter(hlst => hlst match {

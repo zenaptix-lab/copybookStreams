@@ -10,11 +10,21 @@ import shapeless.{::, HList, HNil}
 
 import scala.io.{BufferedSource, Source}
 
+-1.toInt match {
+  case 0x01 => "yes"
+  case _ => "No"
+}
 
 val source: BufferedSource = Source.fromFile("/home/rikus/Downloads/mainframe_test/CQSF602.txt")
 val lines: String = try source.getLines().mkString("\n") finally source.close()
 val bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
 
+println("FROM BIN FILE 0-464: " + bytes.slice(0,464).toBin)
+println("FROM BIN FILE 448-1000: " + bytes.slice(448,1000).toBin)
+
+val combined = s"${bytes.slice(0,32).toBin}${bytes.slice(32,66).toBin}${bytes.slice(66,99).toBin}"
+println(combined)
+assert(combined == bytes.slice(0,99).toBin)
 //create tree
 val forest: Seq[Group] = CopyBookSchema(lines).parseTree(EBCDIC())
 val roots = forest.head.traverseAll
@@ -26,7 +36,7 @@ while (itr.hasNext) {
   println(itr.next().schema())
 }
 
-val genRecValues = Files.rawDataList(bytes, schema, forest)
+val genRecValues = Files.rawDataList(0,bytes, schema, forest)
 val genRecVal = genRecValues.head.filter(hlst => hlst match {
   case head :: HNil => true
   case _ => false
@@ -50,3 +60,4 @@ println(finalRec.toString)
 //  })
 //
 //})
+
