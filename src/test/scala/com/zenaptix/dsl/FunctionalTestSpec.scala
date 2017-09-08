@@ -75,10 +75,10 @@ class FunctionalTestSpec extends WordSpec {
       val bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
       //  println(s"Bitvector of input file ${bytes.toBin}")
       println("roots : " + roots.toList)
-      val genRecValues: Seq[List[HList]] = Files.rawDataList(32,bytes, schema, forest)
+      val genRecValues = Files.rawDataList(32,bytes, schema, forest)
       //  genRecValues.foreach(lst => println(lst.mkString(" | ")))
       println("GENREC values : " + genRecValues.head)
-      genRecValues.head.foreach({
+      genRecValues.head._1.foreach({
         case head :: HNil => println(s"head : ${head.getClass.toString} ${head.toString}")
         case _ => println("not anything")
       })
@@ -87,11 +87,11 @@ class FunctionalTestSpec extends WordSpec {
     "Create a generic record from case class" in {
       val bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
       val schema: Schema = AvroSchema[Cqsf602w]
-      val genRecValues: Seq[List[HList]] = Files.rawDataList(32,bytes, schema, forest)
+      val genRecValues = Files.rawDataList(32,bytes, schema, forest)
       val origRec = new GenericData.Record(schema)
       println("origRec fields : " + origRec.getSchema.getFields)
 
-      val genRecVal: List[HList] = genRecValues.head.filter(hlst => hlst match {
+      val genRecVal: List[HList] = genRecValues.head._1.filter(hlst => hlst match {
         case head :: HNil => true
         case _ => false
       })
@@ -101,15 +101,37 @@ class FunctionalTestSpec extends WordSpec {
       val bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
       val schema: Schema = AvroSchema[Cqsf602w]
       val origRec = new GenericData.Record(schema)
-      val genRecValues: Seq[List[HList]] = Files.rawDataList(32,bytes, schema, forest)
+      val genRecValues = Files.rawDataList(32,bytes, schema, forest)
       println("origRec fields : " + origRec.getSchema.getFields)
 
-      val genRecVal: List[HList] = genRecValues.head.filter(hlst => hlst match {
+      val genRecVal: List[HList] = genRecValues.head._1.filter(hlst => hlst match {
         case head :: HNil => true
         case _ => false
       })
       val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
       println(finalRec.toString)
+    }
+  }
+  "a cobol copybook" should{
+    "decode multiple records from the same binary file" in {
+      var bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
+      val schema: Schema = AvroSchema[Cqsf602w]
+      val origRec = new GenericData.Record(schema)
+      var counter = 0
+//      while(bytes.size > 0) {
+      while(counter < 2) {
+        val genRecValues = Files.rawDataList(32, bytes, schema, forest)
+        val genRecVal: List[HList] = genRecValues.head._1.filter(hlst => hlst match {
+          case head :: HNil => true
+          case _ => false
+        })
+        val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
+        println(Console.YELLOW + finalRec.toString + Console.WHITE)
+        println(Console.YELLOW + genRecValues.head._2 + Console.WHITE)
+        bytes = bytes.drop(genRecValues.head._2)
+        println(Console.YELLOW + "bytes.size : " + Console.WHITE)
+        counter += 1
+      }
     }
   }
 }

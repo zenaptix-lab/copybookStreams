@@ -1155,13 +1155,13 @@ object Files {
   //      }
   //    )
   //  }
-  def rawDataList(fileOffset: Int, f: BitVector, schema: Schema, forest: Seq[Group]): Seq[List[HList]] = {
+  def rawDataList(fileOffset: Long, f: BitVector, schema: Schema, forest: Seq[Group]): Seq[(List[HList],Long)] = {
     println(forest.toList)
     forest.map(tree => {
       println("TREE : " + tree.camelCaseVar)
       val roots: Seq[CBTree] = tree.traverseAll
       var fileIdx = fileOffset
-      roots.map(root => {
+      (roots.map(root => {
         root match {
           case y: Statement => {
             y.dataType match {
@@ -1214,7 +1214,7 @@ object Files {
             HNil
           }
         }
-      }).toList
+      }).toList,fileIdx)
     })
   }
 }
