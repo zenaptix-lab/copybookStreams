@@ -119,7 +119,7 @@ class FunctionalTestSpec extends WordSpec {
       val origRec = new GenericData.Record(schema)
       var counter = 0
 //      while(bytes.size > 0) {
-      while(counter < 2) {
+      while(counter < 10) {
         val genRecValues = Files.rawDataList(32, bytes, schema, forest)
         val genRecVal: List[HList] = genRecValues.head._1.filter(hlst => hlst match {
           case head :: HNil => true
