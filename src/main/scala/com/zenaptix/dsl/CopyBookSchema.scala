@@ -1050,7 +1050,7 @@ object Files {
               }
               cobolChar
             }
-            digitString
+            digitString.mkString("")
 //            s"${digitString.last}${digitString.head}${digitString.tail.dropRight(1).mkString("")}"
           }
         }
