@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.zenaptix.dsl.Files" level="ERROR" additivity="true">
+    <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!--<logger name="org.apache.kafka" level="ERROR" additivity="false">-->
+        <!--<appender-ref ref="CONSOLE"/>-->
+    <!--</logger>-->
+
+    <!-- By default, the level of the root level is set to INFO -->
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

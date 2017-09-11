@@ -14,6 +14,7 @@ import scodec._
 import scodec.bits._
 import codecs._
 import com.sksamuel.avro4s.AvroSchema
+import com.typesafe.scalalogging.LazyLogging
 import shapeless._
 import syntax.std.traversable._
 
@@ -168,7 +169,7 @@ case class AlphaNumeric(
   *
   * @param cpyBook
   */
-case class CopyBookSchema(cpyBook: String) {
+case class CopyBookSchema(cpyBook: String) extends LazyLogging{
   val matcher: Regex = "\\(([^)]+)\\)".r
 
   /**
@@ -188,13 +189,12 @@ case class CopyBookSchema(cpyBook: String) {
     val e: Seq[Int] = b.drop(1).map(_._2) :+ lines.length
     val c: Seq[((String, Int), Int)] = b.zip(e)
     val breakpoints: Seq[(String, (Int, Int))] = c.map(i => (i._1._1, (i._1._2, i._2)))
-    println("breakpoints : " + breakpoints.mkString(";"))
+    logger.info("breakpoints : " + breakpoints.mkString(";"))
 
     val forest: Seq[Seq[((Int, String), Map[String, String])]] = breakpoints.map(p => lines.slice(p._2._1, p._2._2)) //forest should only have multiple items if there is a duplicate level
-    println(Console.GREEN + "FOREST : " + forest.mkString("\n") + Console.WHITE)
+    logger.info(Console.GREEN + "FOREST : " + forest.mkString("\n") + Console.WHITE)
 
     forest.map { f =>
-      //      println("f : " + f)
       val root = Group(1, f.head._1._2,
         mutable.ArrayBuffer(),
         parent = None,
@@ -346,10 +346,6 @@ case class CopyBookSchema(cpyBook: String) {
       }
     }.toMap
   }
-
-  /* def genSchema(tokenMap:Map[String,(String,Int)]):String = {
-    ""
-  }*/
 
   /**
     *
@@ -826,7 +822,7 @@ case class ParseSuccess[T](result: T, remainder: BitVector) extends ParseResult[
 
 case class ParseError[T](result: T, remainder: BitVector) extends ParseResult[Nothing]
 
-object Files {
+object Files extends LazyLogging{
   /**
     *
     * @param dir : Files directory
@@ -843,15 +839,13 @@ object Files {
 
   def createCaseClasses(roots: Seq[Group], packageName: String = "com.zenaptix.test") = {
     roots.foreach { root =>
-      println(s"Creating case classes for root : ${root.name}")
+      logger.info(s"Creating case classes for root : ${root.name}")
       val c = root.traverseGroups.map(g => {
-        println("group : " + g)
-        println("group.children " + g.children)
-        println("g.asCaseClass" + g.asCaseClass)
+        logger.info("group : " + g)
+        logger.info("group.children " + g.children)
+        logger.info("g.asCaseClass" + g.asCaseClass)
         g.asCaseClass
       })
-      //        println("Case Classes : ")
-      //        c.foreach(g => println(g))
       root.printToFile(new File(s"src/test/scala/${packageName.replace(".", "/")}/${root.camelCased}.scala")) { p =>
         p.println(s"package $packageName")
         c.foreach(p.println)
@@ -933,8 +927,8 @@ object Files {
       case ebc: EBCDIC => comp match {
         case Some(compact) => compact match {
           case a if a == 3 => { //bcd
-            println("BCD")
-            println("bits : " + bits)
+            logger.info("BCD")
+            logger.info("bits : " + bits)
             val bte = for (x <- 0 to scale) yield {
               val bts = wordAlign(bits.slice(x * digitBitSize, (x * digitBitSize) + digitBitSize), digitBitSize, align.getOrElse(Left))
               //              println("bts : " + bts.toBin)
@@ -955,7 +949,7 @@ object Files {
         case None => { // display i.e. no comp
           val bte = for (x <- 0 until scale) yield {
             val bts = wordAlign(bits.slice(x * digitBitSize, (x * digitBitSize) + digitBitSize), digitBitSize, align.getOrElse(Left))
-            println("bts : " + bts.toBin)
+            logger.info("bts : " + bts.toBin)
             Codec.decode(bts)(codec).require.value.asInstanceOf[Number].doubleValue().toByte
           }
           bte.toArray
@@ -979,7 +973,6 @@ object Files {
                   idx <- byteArr.indices
                 } yield {
                   if (idx == byteArr.length - 1) { //last byte is sign
-                    //                    println("byteIF : " + byteArr(idx))
                     byteArr(idx) match {
                       case 0x0C => "+"
                       case 0x0D => "-"
@@ -988,11 +981,10 @@ object Files {
                     }
                   }
                   else {
-                    //                    println("byteELSE : " + byteArr(idx))
                     byteArr(idx).toString
                   }
                 }
-                println("digitString : " + digitString)
+                logger.info("digitString : " + digitString)
                 s"${digitString.last}${digitString.head}${digitString.tail.dropRight(1).mkString("")}"
               }
               case _ => { //bin
@@ -1004,7 +996,8 @@ object Files {
             }
             compValue
           }
-          case None => {//display
+          case None => {
+            //display
             val digitString = for {
               idx <- byteArr.indices
             } yield {
@@ -1051,7 +1044,6 @@ object Files {
               cobolChar
             }
             digitString.mkString("")
-//            s"${digitString.last}${digitString.head}${digitString.tail.dropRight(1).mkString("")}"
           }
         }
         finalStringVal
@@ -1089,18 +1081,18 @@ object Files {
 
   def recursiveBuilder(root: CBTree, roots: Seq[CBTree], origRec: GenericData.Record, values: Iterator[HList]): GenericData.Record = {
     val fields = origRec.getSchema.getFields
-    println("FIELDS REC : " + fields)
+    logger.info("FIELDS REC : " + fields)
     val fieldsList = fields.toArray.toList.map(field => {
       field.toString.split(" ").toList.head
     })
-    println("fields List : " + fieldsList)
+    logger.info("fields List : " + fieldsList)
     var newRec = origRec
     if (fields.size() > 0) { //root has child
       fieldsList.foreach(fieldName => {
-        println("FOR EACH CHILD FIELD : " + fieldName)
+        logger.info("FOR EACH CHILD FIELD : " + fieldName)
         val childField = origRec.getSchema.getField(fieldName)
-        println("origRec.getSchema.getField(fieldName)/childField " + childField)
-        println("origRec.getSchema.getField(fieldName).schema/childField.schema : " + childField.schema())
+        logger.info("origRec.getSchema.getField(fieldName)/childField " + childField)
+        logger.info("origRec.getSchema.getField(fieldName).schema/childField.schema : " + childField.schema())
         val isLeaf = Try {
           childField.schema().getFields
         } match {
@@ -1109,9 +1101,9 @@ object Files {
             newRec = recursiveBuilder(root, roots, newFieldRec, values)
             false
           case Failure(e) =>
-            println("ERROR : " + e)
-            println("else origRec.getSchema.getName " + origRec.getSchema.getName)
-            println("Put " + fieldName + " IN " + origRec.getSchema.getName)
+            logger.info("ERROR : " + e)
+            logger.info("else origRec.getSchema.getName " + origRec.getSchema.getName)
+            logger.info("Put " + fieldName + " IN " + origRec.getSchema.getName)
             val fieldVal = values.next() match {
               case h :: HNil => h
               case _ => println("&&&!!!!!")
@@ -1119,46 +1111,37 @@ object Files {
             val fieldType = origRec.getSchema.getField(fieldName).schema().getType
             val stringToType = stringToTypeTag(fieldType.getName)
             origRec.put(fieldName, cast(fieldVal, stringToType))
-            println("origRec put : " + origRec.toString)
+            logger.info("origRec put : " + origRec.toString)
             true
         }
         if (!isLeaf) {
-          println("group put " + fieldName + " IN " + origRec.getSchema.getName)
-          println(s"origRec.put &&&& (${fieldName} , ${childField.toString})")
-          println("NEW REC :  " + newRec.toString)
+          logger.info("group put " + fieldName + " IN " + origRec.getSchema.getName)
+          logger.info(s"origRec.put &&&& (${fieldName} , ${childField.toString})")
+          logger.info("NEW REC :  " + newRec.toString)
           origRec.put(fieldName, newRec)
-          println("origRec put : " + origRec.toString)
+          logger.info("origRec put : " + origRec.toString)
         }
       })
-      println("origRec IF before exit" + origRec.toString)
+      logger.info("origRec IF before exit" + origRec.toString)
       origRec
     }
     else {
-      println("Put " + root.camelCaseVar + " IN " + origRec.getSchema.getName)
+      logger.info("Put " + root.camelCaseVar + " IN " + origRec.getSchema.getName)
       val fieldVal = values.next() match {
         case h :: HNil => h
         case _ => println("&&&!!!!!")
       }
       val fieldType = origRec.getSchema.getField(root.camelCaseVar).schema().getType
       val stringToType = stringToTypeTag(fieldType.getName)
-      println("FIELD VAL !!!! ELSE : " + fieldVal.toString)
+      logger.info("FIELD VAL !!!! ELSE : " + fieldVal.toString)
       origRec.put(root.camelCaseVar, cast(fieldVal, stringToType))
-      println("origRec put ELSE : " + origRec.toString)
+      logger.info("origRec put ELSE : " + origRec.toString)
       origRec
     }
   }
 
-  //  def genRecBuilder(decodedData:Seq[Seq[Any]]) = {
-  //    decodedData.foreach(item => {
-  //        case h::t => ???
-  //        case _ => ???
-  //      }
-  //    )
-  //  }
-  def rawDataList(fileOffset: Long, f: BitVector, schema: Schema, forest: Seq[Group]): Seq[(List[HList],Long)] = {
-    println(forest.toList)
+  def rawDataList(fileOffset: Long, f: BitVector, schema: Schema, forest: Seq[Group]): Seq[(List[HList], Long)] = {
     forest.map(tree => {
-      println("TREE : " + tree.camelCaseVar)
       val roots: Seq[CBTree] = tree.traverseAll
       var fileIdx = fileOffset
       (roots.map(root => {
@@ -1168,22 +1151,17 @@ object Files {
               case a: AlphaNumeric => {
                 //each character is represented by a byte
                 val codec = a.enc.getOrElse(EBCDIC()).codec(None, a.length, None)
-                println("AlphaCodec : " + codec)
+                logger.info("AlphaCodec : " + codec)
                 val bitCount = getBitCount(codec, None, a.length) //count of entire word
-                println("bitCount : " + bitCount)
                 val bits = f.slice(fileIdx, fileIdx + bitCount) // cut out word form binary file
-                println("bits : " + bits.toBin)
                 val padded: Array[Byte] = decode(codec, a.enc.getOrElse(EBCDIC()), a.length, bits, None, a.wordAlligned, None)
-                println("padded : " + padded.toList)
                 val ans = charDecode(padded, a.enc, None)
-                println("ANS : " + ans)
                 fileIdx = fileIdx + bitCount.toInt
                 ans :: HNil
               }
               case d: Decimal => {
-                println(y.dataType)
                 val codec = d.enc.getOrElse(EBCDIC()).codec(d.compact, d.scale, d.signPosition)
-                println("DecCodec : " + codec)
+                logger.info("DecCodec : " + codec)
                 val bitCount = getBitCount(codec, d.compact, d.scale)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
                 val padded: Array[Byte] = decode(codec, d.enc.getOrElse(EBCDIC()), d.scale, bits, d.compact, d.wordAlligned, d.signPosition)
@@ -1193,28 +1171,49 @@ object Files {
                 ans.toFloat :: HNil
               }
               case i: Integer => {
-                println(y.dataType)
                 val codec = i.enc.getOrElse(EBCDIC()).codec(i.compact, i.scale, i.signPosition)
-                println("IntCodec : " + codec)
+                logger.info("IntCodec : " + codec)
                 val bitCount = getBitCount(codec, i.compact, i.scale)
-                println("bitCount : " + bitCount)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
-                println("bits : " + bits.toBin)
                 val padded: Array[Byte] = decode(codec, i.enc.getOrElse(EBCDIC()), i.scale, bits, i.compact, i.wordAlligned, i.signPosition)
-                println("padded : " + padded.toList)
                 val ans = charDecode(padded, i.enc, i.compact)
-                println("ANS : " + ans)
                 fileIdx = fileIdx + bitCount.toInt
                 ans.toDouble :: HNil
               }
             }
           }
           case _ => {
-            println("group")
+            logger.info("group")
             HNil
           }
         }
-      }).toList,fileIdx)
+      }).toList, fileIdx)
     })
+  }
+
+  def writeValues2File(values: List[HList], fileName: String): Unit = {
+    import java.io.FileOutputStream
+    import java.io.PrintWriter
+
+    val savestr = s"$fileName"
+    val f = new File(savestr)
+
+    val out =
+      if (f.exists && !f.isDirectory)
+        new PrintWriter(new FileOutputStream(new File(savestr), true))
+      else
+        new PrintWriter(savestr)
+
+    values.foreach(value => value match {
+      case head :: HNil =>
+        out.append(head.toString)
+        if (value == values.last)
+          out.append("\n")
+        else
+          out.append(",")
+      case _ => ???
+    })
+    //    out.append(mapstring)
+    out.close
   }
 }

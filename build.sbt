@@ -19,7 +19,9 @@ libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
   "com.gensler" % "scalavro_2.10" % "0.6.2",
-  "com.chuusai" %% "shapeless" % "2.3.2"
+  "com.chuusai" %% "shapeless" % "2.3.2",
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
+  "ch.qos.logback" % "logback-classic" % "1.2.3"
 
 )
         

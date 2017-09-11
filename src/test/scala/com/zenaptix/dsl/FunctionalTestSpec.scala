@@ -118,18 +118,18 @@ class FunctionalTestSpec extends WordSpec {
       val schema: Schema = AvroSchema[Cqsf602w]
       val origRec = new GenericData.Record(schema)
       var counter = 0
-//      while(bytes.size > 0) {
-      while(counter < 10) {
+      while(bytes.size > 0) {
+//      while(counter < 10) {
         val genRecValues = Files.rawDataList(32, bytes, schema, forest)
         val genRecVal: List[HList] = genRecValues.head._1.filter(hlst => hlst match {
           case head :: HNil => true
           case _ => false
         })
+
         val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
         println(Console.YELLOW + finalRec.toString + Console.WHITE)
-        println(Console.YELLOW + genRecValues.head._2 + Console.WHITE)
         bytes = bytes.drop(genRecValues.head._2)
-        println(Console.YELLOW + "bytes.size : " + Console.WHITE)
+        writeValues2File(genRecVal,"/home/rikus/Downloads/mainframe_test/valuesTest.txt")
         counter += 1
       }
     }
