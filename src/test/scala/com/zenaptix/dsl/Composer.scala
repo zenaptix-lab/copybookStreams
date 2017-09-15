@@ -1,4 +1,4 @@
-package com.zenaptix.dsl
+package com.zenaptix.spec
 
 /**
   * Created by ian on 2017/01/21.

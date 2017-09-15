@@ -7,7 +7,6 @@ import org.apache.avro.Schema.Field
 import org.apache.avro.generic.{GenericData, GenericRecord, GenericRecordBuilder}
 import scodec.bits.BitVector
 import shapeless.{::, HList, HNil}
-
 import scala.io.{BufferedSource, Source}
 
 -1.toInt match {

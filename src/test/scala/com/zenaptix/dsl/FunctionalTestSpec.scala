@@ -9,21 +9,12 @@ import org.apache.avro.generic.GenericData
 import org.scalatest.WordSpec
 import scodec.bits.BitVector
 import shapeless._
-
 import scala.io.{BufferedSource, Source}
 import com.zenaptix.dsl.Files._
 import com.typesafe.config.ConfigFactory
 
-
-/**
-  * Created by rikus on 8/10/17.
-  */
 class FunctionalTestSpec extends WordSpec {
-  val conf = ConfigFactory.load()
-  val source: BufferedSource = Source.fromFile("/home/rikus/Downloads/mainframe_test/CQSF602.txt")
-  val lines: String = try source.getLines().mkString("\n") finally source.close()
-  val forest: Seq[Group] = CopyBookSchema(lines).parseTree(EBCDIC())
-  val roots = forest.head.traverseAll
+  import FunctionalTestSpecResources._
 
   //create forest
   "a Cobol copybook" can {
