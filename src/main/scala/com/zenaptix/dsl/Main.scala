@@ -11,15 +11,16 @@ import shapeless._
 import scala.io.{BufferedSource, Source}
 import com.zenaptix.dsl.Files._
 import com.typesafe.config.ConfigFactory
+import com.typesafe.scalalogging.LazyLogging
+
 import scala.language.experimental.macros
 
 /**
   * Created by rikus on 9/15/17.
   */
 
-object Main extends App {
+object Main extends App with LazyLogging {
   val conf = ConfigFactory.load()
-  printf("hello %s!", "world")
   if (args.length == 0) {
     println(Console.RED + "please give input args" + Console.WHITE)
   }
@@ -32,9 +33,11 @@ object Main extends App {
 
     args(1).toString match {
       case "-C" => Files.createCaseClasses(forest, "com.zenaptix.dsl") //todo: create case classes should happen as a macro at compile time to make class availible at runtime
+
       case "-R" =>
         var bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
         val schema: Schema = AvroSchema[Cqsf602w]
+        logger.error(Console.RED + s"shema : ${schema.toString(true)} " + Console.WHITE)
         val origRec = new GenericData.Record(schema)
         var counter = 0
         if (conf.getInt("copybook.numRecords") <= 0) {
@@ -67,6 +70,7 @@ object Main extends App {
             counter += 1
           }
         }
+
     }
   }
 }
