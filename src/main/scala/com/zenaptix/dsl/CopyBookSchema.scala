@@ -941,7 +941,9 @@ object Files extends LazyLogging{
           case _ => { //bin
             //            val bts = wordAlign(bits, digitBitSize, align.getOrElse(Left))
             val buf = ByteBuffer.allocate(8)
+            logger.info("codec : " + codec.toString)
             val decValue = Codec.decode(bits)(codec).require.value.asInstanceOf[Number].doubleValue()
+            logger.info("decValue : " + decValue )
             val byteArr = buf.putDouble(decValue).array()
             byteArr
           }
@@ -989,7 +991,6 @@ object Files extends LazyLogging{
               }
               case _ => { //bin
                 val buf = ByteBuffer.wrap(byteArr)
-                buf.flip()
                 buf.getDouble.toString //returns number value as a string "1500"
                 //                buf.clear()
               }
@@ -1039,7 +1040,7 @@ object Files extends LazyLogging{
                 case -9 => "7"
                 case -8 => "8"
                 case -7 => "9"
-                case _ => " "
+                case _ => "&"
               }
               cobolChar
             }
@@ -1141,7 +1142,9 @@ object Files extends LazyLogging{
   }
 
   def rawDataList(fileOffset: Long, f: BitVector, schema: Schema, forest: Seq[Group]): Seq[(List[HList], Long)] = {
+    println(Console.RED + "forest : " + forest.toList + Console.WHITE)
     forest.map(tree => {
+      println(Console.RED + "tree : " + tree + Console.WHITE)
       val roots: Seq[CBTree] = tree.traverseAll
       var fileIdx = fileOffset
       (roots.map(root => {
