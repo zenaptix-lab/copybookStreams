@@ -1,0 +1,32 @@
+{
+  "type" : "record",
+  "name" : "Mbsk861",
+  "namespace" : "com.zenaptix.dsl",
+  "fields" : [ {
+    "name" : "lngth861",
+    "type" : "int"
+  }, {
+    "name" : "pkeyk861",
+    "type" : {
+      "type" : "record",
+      "name" : "Pkeyk861",
+      "fields" : [ {
+        "name" : "uniqEftNoK861",
+        "type" : "string"
+      } ]
+    }
+  }, {
+    "name" : "datak861",
+    "type" : {
+      "type" : "record",
+      "name" : "Datak861",
+      "fields" : [ {
+        "name" : "incrPaymNoK861",
+        "type" : "long"
+      }, {
+        "name" : "tbcK861",
+        "type" : "string"
+      } ]
+    }
+  } ]
+}

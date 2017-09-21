@@ -3,7 +3,7 @@ package com.zenaptix.dsl
 import java.io.File
 
 import com.sksamuel.avro4s.AvroSchema
-import com.zenaptix.test.Cqsf602w
+
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import org.scalatest.WordSpec
