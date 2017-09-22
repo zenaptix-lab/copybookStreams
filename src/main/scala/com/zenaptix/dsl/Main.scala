@@ -29,7 +29,7 @@ object Main extends App with LazyLogging {
     val source = Source.fromFile(args(0).toString)
     val lines: String = try source.getLines().mkString("\n") finally source.close()
     val forest: Seq[Group] = CopyBookSchema(lines).parseTree(EBCDIC())
-    val bitOffset = 32
+    var bitOffset = 0
     logger.info(Console.CYAN + forest.toList + Console.WHITE)
     //    forest.foreach({ tree =>
     //    logger.info(Console.CYAN + tree.camelCaseVar + Console.WHITE)

@@ -999,6 +999,7 @@ object Files extends LazyLogging{
           }
           case None => {
             //display
+            logger.info("byteArr  :" + byteArr.toList)
             val digitString = for {
               idx <- byteArr.indices
             } yield {
@@ -1175,6 +1176,7 @@ object Files extends LazyLogging{
             case i: Integer => {
               val codec = i.enc.getOrElse(EBCDIC()).codec(i.compact, i.scale, i.signPosition)
               logger.info("IntCodec : " + codec)
+              logger.info("root : " + root.camelCaseVar)
               val bitCount = getBitCount(codec, i.compact, i.scale)
               val bits = f.slice(fileIdx, fileIdx + bitCount)
               val padded: Array[Byte] = decode(codec, i.enc.getOrElse(EBCDIC()), i.scale, bits, i.compact, i.wordAlligned, i.signPosition)
