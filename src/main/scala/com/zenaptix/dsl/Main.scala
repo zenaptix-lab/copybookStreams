@@ -18,8 +18,10 @@ import scala.language.experimental.macros
 /**
   * Created by rikus on 9/15/17.
   */
-//@Copybook
+
+
 object Main extends App with LazyLogging {
+
   val conf = ConfigFactory.load()
   if (args.length == 0) {
     println(Console.RED + "please give input args" + Console.WHITE)
@@ -30,13 +32,18 @@ object Main extends App with LazyLogging {
     val lines: String = try source.getLines().mkString("\n") finally source.close()
     val forest: Seq[Group] = CopyBookSchema(lines).parseTree(EBCDIC())
     val roots = forest.head.traverseAll
+    val schemas = Schemas(source, lines, forest, roots)
 
     args(1).toString match {
-      case "-C" => Files.createCaseClasses(forest, "com.zenaptix.dsl") //todo: create case classes should happen as a macro at compile time to make class availible at runtime
+      case "-C" => {
+        //        Files.createCaseClasses(forest, "com.zenaptix.dsl") //todo: create case classes should happen as a macro at compile time to make class availible at runtime
+        schemas.createSchemas
+      }
 
       case "-R" =>
         var bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
-        val schema: Schema = AvroSchema[Cqsf602w] //todo:
+        //        val schema: Schema = AvroSchema[String] //todo: inject type from macro
+        val schema = schemas.schema
         logger.error(Console.RED + s"shema : ${schema.toString(true)} " + Console.WHITE)
         val origRec = new GenericData.Record(schema)
         var counter = 0

@@ -8,7 +8,7 @@ object Settings {
   lazy val projectSettings = Seq(
     name := "cobol_copybook",
     version := "1.0",
-    scalaVersion := "2.11.8",
+    scalaVersion := "2.11.11",
     organization in ThisBuild := "com.zenaptix",
     resolvers += Resolver.jcenterRepo,
     publishMavenStyle := true,

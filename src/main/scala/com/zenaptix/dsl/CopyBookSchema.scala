@@ -838,6 +838,7 @@ object Files extends LazyLogging{
   }
 
   def createCaseClasses(roots: Seq[Group], packageName: String = "com.zenaptix.test") = {
+    val headRootName = roots.head.camelCaseVar
     roots.foreach { root =>
       logger.info(s"Creating case classes for root : ${root.name}")
       val c = root.traverseGroups.map(g => {
@@ -851,6 +852,7 @@ object Files extends LazyLogging{
         c.foreach(p.println)
       }
     }
+    headRootName
   }
 
   def copyBytes(fileName: String): BitVector = {
