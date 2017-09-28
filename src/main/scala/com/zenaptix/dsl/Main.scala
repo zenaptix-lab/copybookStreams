@@ -18,7 +18,7 @@ import scala.language.experimental.macros
 /**
   * Created by rikus on 9/15/17.
   */
-
+//@Copybook
 object Main extends App with LazyLogging {
   val conf = ConfigFactory.load()
   if (args.length == 0) {
@@ -36,7 +36,7 @@ object Main extends App with LazyLogging {
 
       case "-R" =>
         var bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
-        val schema: Schema = AvroSchema[Cqsf602w]
+        val schema: Schema = AvroSchema[Cqsf602w] //todo:
         logger.error(Console.RED + s"shema : ${schema.toString(true)} " + Console.WHITE)
         val origRec = new GenericData.Record(schema)
         var counter = 0
