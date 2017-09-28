@@ -1,6 +1,12 @@
 import java.io.File
 
-import org.apache.avro.SchemaBuilder
+import com.typesafe.config.ConfigFactory
+import com.zenaptix.dsl._
+import org.apache.avro.{Schema, SchemaBuilder}
+import org.apache.avro.SchemaBuilder.{FieldAssembler, RecordBuilder}
+
+import scala.collection.mutable
+import scala.io.{BufferedSource, Source}
 
 //val schema =
 //  """ {
@@ -483,7 +489,6 @@ import org.apache.avro.SchemaBuilder
 //println(schemaPat.toString(true))
 //val schemaPat2 = org.apache.avro.Schema.parse(new File("/home/rikus/Documents/ZenAptix/copybookStreams/src/main/resources/Mbsk862.json"))
 
-val builderSchema = SchemaBuilder.record("example").namespace("com.zenaptix")
 //val a = builderSchema
 //  .fields()
 //  .name("lngth861").`type`("int").noDefault()
@@ -503,7 +508,8 @@ val builderSchema = SchemaBuilder.record("example").namespace("com.zenaptix")
 //println("***************************" + c.noDefault().endRecord() + "*******************************")
 
 
-val complete = builderSchema
+val complete = SchemaBuilder
+  .record("Mbsk861").namespace("com.zenaptix.dsl")
   .fields()
   .name("lngth861").`type`("int").noDefault()
   .name("pkeyk861").`type`().record("Pkeyk861")
@@ -517,3 +523,60 @@ val complete = builderSchema
 
 
 println("completeSchema : " + complete.noDefault().endRecord().noDefault().endRecord())
+
+val a = SchemaBuilder.record("").namespace("")
+val b = a.fields()
+val c = b.name("").`type`("").noDefault()
+val d = c.name("").`type`().record("")
+d
+//
+val conf = ConfigFactory.load()
+val source: BufferedSource = Source.fromFile("/home/rikus/Downloads/mainframe_test/paymentHistory/MBSK861.TXT")
+val lines: String = try source.getLines().mkString("\n") finally source.close()
+val forest: Seq[Group] = CopyBookSchema(lines).parseTree(EBCDIC())
+val roots = forest.head.traverseAll
+val builder = SchemaBuilder.builder().record(roots.head.camelCaseVar).namespace("com.zenaptix")
+
+def schemaBuilder[T <: SchemaBuilder,R <: SchemaBuilder.FieldAssembler[Schema]](forest: Seq[Group], nameSpace: String = "com.zenaptix") = {
+  forest.foreach({ tree =>
+    val builderSchema = SchemaBuilder.record(tree.camelCaseVar).namespace("com.zenaptix.dsl")
+    val cbTrees = tree.traverseAll.toIterator
+    while (cbTrees.hasNext) {
+      val cbTree = cbTrees.next()
+
+      def returnBuilder(cbT: CBTree, recordBuilder: SchemaBuilder.RecordBuilder[Schema])(fieldAssembler: SchemaBuilder.RecordBuilder[SchemaBuilder.RecordDefault[Schema]]): Schema = {
+        cbT match {
+          case grp: Group => {
+            println("GROUP : " + grp.camelCaseVar)
+            returnBuilder(cbTrees.next(), recordBuilder)(recordBuilder.fields().name(cbT.camelCaseVar).`type`().record(cbT.camelCaseVar.capitalize))
+          }
+          case stmnt: Statement => {
+            println("statement : " + stmnt.camelCaseVar)
+            returnBuilder(cbTrees.next(),recordBuilder) (recordBuilder.fields().name(s"${cbT.camelCaseVar}").`type`(cbT.scalaType).noDefault())
+          }
+        }
+      }
+
+      val schema = returnBuilder(cbTree, builderSchema)
+      println("schema : " + schema.toString(true))
+    }
+
+  })
+}
+schemaBuilder(forest)
+
+//
+roots.foldLeft(builder)((currentBuilder, root) => {
+  //  println("ROOT : " + root)
+  root match {
+    case grp: Group => {
+      println("group :" + grp)
+      currentBuilder.fields()
+    }
+    case stmnt: Statement => {
+      println("statement : " + stmnt)
+      currentBuilder.record(stmnt.camelCaseVar).fields().name(stmnt.camelCaseVar).`type`(stmnt.scalaType).noDefault()
+    }
+    case _ => currentBuilder
+  }
+})
