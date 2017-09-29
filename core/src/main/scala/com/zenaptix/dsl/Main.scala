@@ -1,5 +1,6 @@
 package com.zenaptix.dsl
 
+import com.sksamuel.avro4s.AvroSchema
 import org.apache.avro.generic.GenericData
 import scodec.bits.BitVector
 import shapeless._
@@ -8,12 +9,16 @@ import scala.io.{BufferedSource, Source}
 import com.zenaptix.dsl.Files._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import macros.Schemas
 
 /**
   * Created by rikus on 9/15/17.
   */
 
+@CopyBookMacro
+case class Schemas(source: BufferedSource, lines: String, forest: Seq[Group], roots: Seq[CBTree], namespace: String = "com.zenaptix.dsl") {
+  def createSchemas = Files.createCaseClasses(forest, namespace) //todo: create case classes should happen as a macro at compile time to make class availible at runtime
+  def schema = AvroSchema[String] //todo: inject type from macro
+}
 
 object Main extends App with LazyLogging {
   val conf = ConfigFactory.load()

@@ -5,15 +5,18 @@ import java.util.Properties
 object Settings {
   val appProperties = settingKey[Properties]("The application properties")
 
-  lazy val projectSettings = Seq(
-    name := "cobol_copybook",
-    version := "1.0",
+  lazy val common = Seq(
     scalaVersion := "2.11.11",
     organization in ThisBuild := "com.zenaptix",
     resolvers += Resolver.jcenterRepo,
     publishMavenStyle := true,
     publishArtifact in Test := false
   )
+
+  lazy val projectSettings = Seq(
+    name := "cobol_copybook",
+    version := "1.0"
+  ) ++ common
 
   lazy val resolverSettings = Seq(
     resolvers += Resolver.sonatypeRepo("releases"),

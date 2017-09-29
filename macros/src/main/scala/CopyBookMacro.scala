@@ -1,7 +1,3 @@
-package macros
-
-import com.sksamuel.avro4s.AvroSchema
-import com.zenaptix.dsl.{CBTree, Files, Group}
 import scala.io.BufferedSource
 import scala.meta._
 
@@ -14,7 +10,7 @@ class CopyBookMacro extends scala.annotation.StaticAnnotation {
     defn match {
       case cls@Defn.Class(_, _, _, Ctor.Primary(_, _, paramss), template) =>
         val typeName = "[Int]".parse[Type].get
-        
+
         val namesToValues: scala.collection.immutable.Seq[Term.Tuple] = paramss.flatten.map { param =>
           q"(${param.name.syntax}, ${Term.Name(param.name.value)})"
         }
@@ -26,14 +22,14 @@ class CopyBookMacro extends scala.annotation.StaticAnnotation {
         cls.copy(templ = template.copy(stats = Some(templateStats)))
       case _ =>
         println(defn.structure)
-        abort("@Class2Map must annotate a class.")
+        abort("@CopyBookMacro must annotate a class.")
     }
   }
 }
 
-@CopyBookMacro
-case class Schemas(source: BufferedSource, lines: String, forest: Seq[Group], roots: Seq[CBTree], namespace: String = "com.zenaptix.dsl") {
-  def createSchemas = Files.createCaseClasses(forest, namespace) //todo: create case classes should happen as a macro at compile time to make class availible at runtime
-  def schema = AvroSchema[String] //todo: inject type from macro
-}
+//@CopyBookMacro
+//case class Schemas(source: BufferedSource, lines: String, forest: Seq[Group], roots: Seq[CBTree], namespace: String = "com.zenaptix.dsl") {
+//  def createSchemas = Files.createCaseClasses(forest, namespace) //todo: create case classes should happen as a macro at compile time to make class availible at runtime
+//  def schema = AvroSchema[String] //todo: inject type from macro
+//}
 
