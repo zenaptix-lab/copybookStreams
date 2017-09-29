@@ -10,7 +10,6 @@ import com.zenaptix.dsl.Files._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import com.zenaptix.macros.CopyBookMacro
-import org.apache.avro.Schema
 
 /**
   * Created by rikus on 9/15/17.
@@ -45,7 +44,7 @@ object Main extends App with LazyLogging {
         var bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
         //        val schema: Schema = AvroSchema[String] //todo: inject type from macro
         val schema = schemas.schema
-        logger.error(Console.RED + s"shema : ${schema.toString(true)} " + Console.WHITE)
+        logger.error(Console.RED + s"schema : ${schema.toString(true)} " + Console.WHITE)
         val origRec = new GenericData.Record(schema)
         var counter = 0
         if (conf.getInt("copybook.numRecords") <= 0) {

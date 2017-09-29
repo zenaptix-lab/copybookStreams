@@ -11,7 +11,7 @@ class CopyBookMacro extends scala.annotation.StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
     defn match {
       case cls@Defn.Class(_, _, _, Ctor.Primary(_, _, paramss), template) =>
-        val typeName = "Int".parse[Type].get
+        val typeName = "Mbsk861".parse[Type].get
 //        val namesToValues: scala.collection.immutable.Seq[Term.Tuple] = paramss.flatten.map { param =>
 //          q"(${param.name.syntax}, ${Term.Name(param.name.value)})"
 //        }
