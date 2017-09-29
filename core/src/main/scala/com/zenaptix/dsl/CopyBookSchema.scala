@@ -847,7 +847,7 @@ object Files extends LazyLogging{
         logger.info("g.asCaseClass" + g.asCaseClass)
         g.asCaseClass
       })
-      root.printToFile(new File(s"src/main/scala/${packageName.replace(".", "/")}/${root.camelCased}.scala")) { p =>
+      root.printToFile(new File(s"core/src/main/scala/${packageName.replace(".", "/")}/${root.camelCased}.scala")) { p =>
         p.println(s"package $packageName")
         c.foreach(p.println)
       }
