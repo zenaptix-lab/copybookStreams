@@ -9,6 +9,7 @@ import scala.io.{BufferedSource, Source}
 import com.zenaptix.dsl.Files._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
+import com.zenaptix.macros.CopyBookMacro
 
 /**
   * Created by rikus on 9/15/17.

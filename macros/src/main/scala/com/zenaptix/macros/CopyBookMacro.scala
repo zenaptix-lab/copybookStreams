@@ -1,4 +1,5 @@
-import scala.io.BufferedSource
+package com.zenaptix.macros
+
 import scala.meta._
 
 /**
