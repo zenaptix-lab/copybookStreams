@@ -10,6 +10,7 @@ import com.zenaptix.dsl.Files._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import com.zenaptix.macros.CopyBookMacro
+import org.apache.avro.Schema
 
 /**
   * Created by rikus on 9/15/17.
@@ -18,7 +19,7 @@ import com.zenaptix.macros.CopyBookMacro
 @CopyBookMacro
 case class Schemas(source: BufferedSource, lines: String, forest: Seq[Group], roots: Seq[CBTree], namespace: String = "com.zenaptix.dsl") {
   def createSchemas = Files.createCaseClasses(forest, namespace) //todo: create case classes should happen as a macro at compile time to make class availible at runtime
-  def schema = AvroSchema[String] //todo: inject type from macro
+//  def schema: Schema = AvroSchema[String] //todo: inject type from macro
 }
 
 object Main extends App with LazyLogging {

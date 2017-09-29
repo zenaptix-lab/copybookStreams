@@ -1,6 +1,7 @@
 package com.zenaptix.macros
 
 import scala.meta._
+import com.sksamuel.avro4s.AvroSchema
 
 /**
   * Created by rikus on 9/28/17.
@@ -10,15 +11,14 @@ class CopyBookMacro extends scala.annotation.StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
     defn match {
       case cls@Defn.Class(_, _, _, Ctor.Primary(_, _, paramss), template) =>
-        val typeName = "[Int]".parse[Type].get
-
-        val namesToValues: scala.collection.immutable.Seq[Term.Tuple] = paramss.flatten.map { param =>
-          q"(${param.name.syntax}, ${Term.Name(param.name.value)})"
-        }
+        val typeName = "Int".parse[Type].get
+//        val namesToValues: scala.collection.immutable.Seq[Term.Tuple] = paramss.flatten.map { param =>
+//          q"(${param.name.syntax}, ${Term.Name(param.name.value)})"
+//        }
         val toSchemaTypeImpl: Term =
-          q"_root_.com.sksamuel.avro4s.AvroSchema[${typeName}]"
+          q"com.sksamuel.avro4s.AvroSchema[${typeName}]"
         val toSchemaType =
-          q"def schema: _root_.com.sksamuel.avro4s.AvroSchema[${typeName}] = $toSchemaTypeImpl"
+          q"def schema: org.apache.avro.Schema = $toSchemaTypeImpl"
         val templateStats: scala.collection.immutable.Seq[Stat] = toSchemaType +: template.stats.getOrElse(Nil)
         cls.copy(templ = template.copy(stats = Some(templateStats)))
       case _ =>
