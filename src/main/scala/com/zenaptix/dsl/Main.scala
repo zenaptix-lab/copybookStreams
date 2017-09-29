@@ -1,9 +1,5 @@
 package com.zenaptix.dsl
 
-import java.io.File
-
-import com.sksamuel.avro4s.AvroSchema
-import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import scodec.bits.BitVector
 import shapeless._
@@ -12,8 +8,7 @@ import scala.io.{BufferedSource, Source}
 import com.zenaptix.dsl.Files._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-
-import scala.language.experimental.macros
+import macros.Schemas
 
 /**
   * Created by rikus on 9/15/17.
@@ -21,7 +16,6 @@ import scala.language.experimental.macros
 
 
 object Main extends App with LazyLogging {
-
   val conf = ConfigFactory.load()
   if (args.length == 0) {
     println(Console.RED + "please give input args" + Console.WHITE)
@@ -30,7 +24,7 @@ object Main extends App with LazyLogging {
     //    val source: BufferedSource = Source.fromFile("/home/rikus/Downloads/mainframe_test/CQSF602.txt")
     val source = Source.fromFile(args(0).toString)
     val lines: String = try source.getLines().mkString("\n") finally source.close()
-    val forest: Seq[Group] = CopyBookSchema(lines).parseTree(EBCDIC())
+    val forest = CopyBookSchema(lines).parseTree(EBCDIC())
     val roots = forest.head.traverseAll
     val schemas = Schemas(source, lines, forest, roots)
 
