@@ -7,3 +7,4 @@ q"com.sksamuel.avro4s.AvroSchema[T]".structure
 
 q"scala.Int".structure
 
+

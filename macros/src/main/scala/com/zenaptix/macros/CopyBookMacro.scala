@@ -1,6 +1,7 @@
 package com.zenaptix.macros
 
 import scala.meta._
+import scala.annotation.compileTimeOnly
 import com.sksamuel.avro4s.AvroSchema
 
 /**
@@ -11,14 +12,17 @@ class CopyBookMacro extends scala.annotation.StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
     defn match {
       case cls@Defn.Class(_, _, _, Ctor.Primary(_, _, paramss), template) =>
-        val typeName = "Mbsk861".parse[Type].get
-//        val namesToValues: scala.collection.immutable.Seq[Term.Tuple] = paramss.flatten.map { param =>
-//          q"(${param.name.syntax}, ${Term.Name(param.name.value)})"
-//        }
-        val toSchemaTypeImpl: Term =
-          q"com.sksamuel.avro4s.AvroSchema[${typeName}]"
+        val namesToValues: Seq[Term.Tuple] = paramss.flatten.map({ param =>
+          q"(${Term.fresh(param.name.syntax)}, ${Term.Name(param.name.value)})"
+        })
+        val typesList = List("com.zenaptix.dsl.cobolClasses.Mbsk861")
+        val toSchemaTypeImpl =
+        //          q"com.sksamuel.avro4s.AvroSchema[com.zenaptix.dsl.cobolClasses.Mbsk861]"
+        //          q"com.sksamuel.avro4s.AvroSchema[${typesList.head.parse[Type].get}]"
+          q"List(com.sksamuel.avro4s.AvroSchema[${typesList.head.parse[Type].get}])"
         val toSchemaType =
-          q"def schema: org.apache.avro.Schema = $toSchemaTypeImpl"
+          q"def schema: List[org.apache.avro.Schema] = $toSchemaTypeImpl"
+
         val templateStats: scala.collection.immutable.Seq[Stat] = toSchemaType +: template.stats.getOrElse(Nil)
         cls.copy(templ = template.copy(stats = Some(templateStats)))
       case _ =>
@@ -27,10 +31,3 @@ class CopyBookMacro extends scala.annotation.StaticAnnotation {
     }
   }
 }
-
-//@CopyBookMacro
-//case class Schemas(source: BufferedSource, lines: String, forest: Seq[Group], roots: Seq[CBTree], namespace: String = "com.zenaptix.dsl") {
-//  def createSchemas = Files.createCaseClasses(forest, namespace) //todo: create case classes should happen as a macro at compile time to make class availible at runtime
-//  def schema = AvroSchema[String] //todo: inject type from macro
-//}
-

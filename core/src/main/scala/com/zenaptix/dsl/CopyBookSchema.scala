@@ -837,7 +837,7 @@ object Files extends LazyLogging{
     }
   }
 
-  def createCaseClasses(roots: Seq[Group], packageName: String = "com.zenaptix.test") = {
+  def createCaseClasses(roots: Seq[Group], packageName: String = "com.zenaptix.dsl.cobolClasses") = {
     val headRootName = roots.head.camelCaseVar
     roots.foreach { root =>
       logger.info(s"Creating case classes for root : ${root.name}")

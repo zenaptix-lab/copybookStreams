@@ -9,16 +9,17 @@ import scala.io.{BufferedSource, Source}
 import com.zenaptix.dsl.Files._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import com.zenaptix.macros.CopyBookMacro
+import com.zenaptix.macros._
+import org.apache.avro.Schema
 
 /**
   * Created by rikus on 9/15/17.
   */
 
 @CopyBookMacro
-case class Schemas(source: BufferedSource, lines: String, forest: Seq[Group], roots: Seq[CBTree], namespace: String = "com.zenaptix.dsl") {
+case class Schemas(source: BufferedSource, lines: String, forest: Seq[Group], roots: Seq[CBTree], namespace: String = "com.zenaptix.dsl.cobolClasses", cobolTypes: String = "com.sksamuel.avro4s.AvroSchema[com.zenaptix.dsl.cobolClasses.Mbsk861]") {
   def createSchemas = Files.createCaseClasses(forest, namespace) //todo: create case classes should happen as a macro at compile time to make class availible at runtime
-//  def schema: Schema = AvroSchema[String] //todo: inject type from macro
+  //  def schema: Schema = AvroSchema[String] //todo: inject type from macro
 }
 
 object Main extends App with LazyLogging {
@@ -41,15 +42,15 @@ object Main extends App with LazyLogging {
       }
 
       case "-R" =>
-        var bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07")
+        var bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/paymentHistory/VEPSS.SLIVE.GSAM.DK86A0.SEP19")
         //        val schema: Schema = AvroSchema[String] //todo: inject type from macro
-        val schema = schemas.schema
+        val schema = schemas.schema.head
         logger.error(Console.RED + s"schema : ${schema.toString(true)} " + Console.WHITE)
         val origRec = new GenericData.Record(schema)
         var counter = 0
         if (conf.getInt("copybook.numRecords") <= 0) {
           while (bytes.size > 0) {
-            val genRecValues = Files.rawDataList(32, bytes, schema, forest)
+            val genRecValues = Files.rawDataList(0, bytes, schema, forest)
             val genRecVal: List[HList] = genRecValues.head._1.filter(hlst => hlst match {
               case head :: HNil => true
               case _ => false
@@ -64,7 +65,8 @@ object Main extends App with LazyLogging {
         }
         else {
           while (counter < conf.getInt("copybook.numRecords")) {
-            val genRecValues = Files.rawDataList(32, bytes, schema, forest)
+            logger.error(Console.RED + s"counter : $counter")
+            val genRecValues = Files.rawDataList(0, bytes, schema, forest)
             val genRecVal: List[HList] = genRecValues.head._1.filter(hlst => hlst match {
               case head :: HNil => true
               case _ => false
