@@ -15,13 +15,16 @@ class CopyBookMacro extends scala.annotation.StaticAnnotation {
         val namesToValues: Seq[Term.Tuple] = paramss.flatten.map({ param =>
           q"(${Term.fresh(param.name.syntax)}, ${Term.Name(param.name.value)})"
         })
-        val typesList = List("com.zenaptix.dsl.cobolClasses.Mbsk861")
+        val typesList = List("com.zenaptix.dsl.cobolClasses.Mbsk861", "com.zenaptix.dsl.cobolClasses.Mbsk862")
         val toSchemaTypeImpl =
         //          q"com.sksamuel.avro4s.AvroSchema[com.zenaptix.dsl.cobolClasses.Mbsk861]"
         //          q"com.sksamuel.avro4s.AvroSchema[${typesList.head.parse[Type].get}]"
           q"List(com.sksamuel.avro4s.AvroSchema[${typesList.head.parse[Type].get}])"
+        val listOfTypes = typesList.map(tpe => {
+          q"com.sksamuel.avro4s.AvroSchema[${tpe.parse[Type].get}]"
+        })
         val toSchemaType =
-          q"def schema: List[org.apache.avro.Schema] = $toSchemaTypeImpl"
+          q"""def schema: List[org.apache.avro.Schema] = List(..$listOfTypes)"""
 
         val templateStats: scala.collection.immutable.Seq[Stat] = toSchemaType +: template.stats.getOrElse(Nil)
         cls.copy(templ = template.copy(stats = Some(templateStats)))

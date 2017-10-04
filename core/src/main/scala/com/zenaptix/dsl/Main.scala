@@ -44,6 +44,7 @@ object Main extends App with LazyLogging {
       case "-R" =>
         var bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/paymentHistory/VEPSS.SLIVE.GSAM.DK86A0.SEP19")
         //        val schema: Schema = AvroSchema[String] //todo: inject type from macro
+        logger.error("schemas : " + schemas.schema.length)
         val schema = schemas.schema.head
         logger.error(Console.RED + s"schema : ${schema.toString(true)} " + Console.WHITE)
         val origRec = new GenericData.Record(schema)
