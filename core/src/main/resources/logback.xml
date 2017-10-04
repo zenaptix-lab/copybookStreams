@@ -7,7 +7,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.zenaptix.dsl.Files" level="ERROR" additivity="true">
+    <logger name="com.zenaptix.dsl.Files" level="INFO" additivity="false">
     <appender-ref ref="CONSOLE"/>
     </logger>
 

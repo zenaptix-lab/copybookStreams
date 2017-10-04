@@ -37,50 +37,51 @@ object Main extends App with LazyLogging {
 
     args(1).toString match {
       case "-C" => {
-        //        Files.createCaseClasses(forest, "com.zenaptix.dsl") //todo: create case classes should happen as a macro at compile time to make class availible at runtime
         schemas.createSchemas
       }
 
       case "-R" =>
         var bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/paymentHistory/VEPSS.SLIVE.GSAM.DK86A0.SEP19")
-        //        val schema: Schema = AvroSchema[String] //todo: inject type from macro
+        logger.info("bytes : " + bytes.slice(0,100).toBin)
         logger.error("schemas : " + schemas.schema.length)
-        val schema = schemas.schema.head
-        logger.error(Console.RED + s"schema : ${schema.toString(true)} " + Console.WHITE)
-        val origRec = new GenericData.Record(schema)
-        var counter = 0
-        if (conf.getInt("copybook.numRecords") <= 0) {
-          while (bytes.size > 0) {
-            val genRecValues = Files.rawDataList(0, bytes, schema, forest)
-            val genRecVal: List[HList] = genRecValues.head._1.filter(hlst => hlst match {
-              case head :: HNil => true
-              case _ => false
-            })
+        //        val schema = schemas.schema.head
+        val schema = schemas.schema
+        schema.foreach(sc => {
+          logger.error(Console.RED + s"schema : ${sc.toString(true)} " + Console.WHITE)
+          val origRec = new GenericData.Record(sc)
+          var counter = 0
+          if (conf.getInt("copybook.numRecords") <= 0) {
+            while (bytes.size > 0) {
+              val genRecValues = Files.rawDataList(conf.getInt("copybook.recOffset"), bytes, sc, forest)
+              val genRecVal: List[HList] = genRecValues.head._1.filter(hlst => hlst match {
+                case head :: HNil => true
+                case _ => false
+              })
 
-            val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
-            println(Console.YELLOW + finalRec.toString + Console.WHITE)
-            bytes = bytes.drop(genRecValues.head._2)
-            writeValues2File(genRecVal, "/home/rikus/Downloads/mainframe_test/valuesTest.csv")
-            counter += 1
+              val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
+              println(Console.YELLOW + finalRec.toString + Console.WHITE)
+              bytes = bytes.drop(genRecValues.head._2)
+              writeValues2File(genRecVal, "/home/rikus/Downloads/mainframe_test/valuesTest.csv")
+              counter += 1
+            }
           }
-        }
-        else {
-          while (counter < conf.getInt("copybook.numRecords")) {
-            logger.error(Console.RED + s"counter : $counter")
-            val genRecValues = Files.rawDataList(0, bytes, schema, forest)
-            val genRecVal: List[HList] = genRecValues.head._1.filter(hlst => hlst match {
-              case head :: HNil => true
-              case _ => false
-            })
+          else {
+            while (counter < conf.getInt("copybook.numRecords")) {
+              logger.error(Console.RED + s"counter : $counter")
+              val genRecValues = Files.rawDataList(conf.getInt("copybook.recOffset"), bytes, sc, forest)
+              val genRecVal: List[HList] = genRecValues.head._1.filter(hlst => hlst match {
+                case head :: HNil => true
+                case _ => false
+              })
 
-            val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
-            println(Console.YELLOW + finalRec.toString + Console.WHITE)
-            bytes = bytes.drop(genRecValues.head._2)
-            writeValues2File(genRecVal, "/home/rikus/Downloads/mainframe_test/valuesTest.csv")
-            counter += 1
+              val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
+              println(Console.YELLOW + finalRec.toString + Console.WHITE)
+              bytes = bytes.drop(genRecValues.head._2)
+              writeValues2File(genRecVal, "/home/rikus/Downloads/mainframe_test/valuesTest.csv")
+              counter += 1
+            }
           }
-        }
-
+        })
     }
   }
 }

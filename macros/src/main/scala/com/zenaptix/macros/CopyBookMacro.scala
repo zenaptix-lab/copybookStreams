@@ -1,6 +1,6 @@
 package com.zenaptix.macros
 
-import java.io.File
+import java.io.{BufferedWriter, File, FileWriter}
 
 import scala.meta._
 import scala.annotation.compileTimeOnly
@@ -14,9 +14,25 @@ object CopyBookMacro{
   def getListOfFiles(dir: String): List[File] = {
     val d = new File(dir)
     if (d.exists && d.isDirectory) {
-      d.listFiles.filter(_.isFile).toList
+//      d.listFiles.filter(_.isFile).toList
+      val lof = d.listFiles.filter(fl => !fl.getName.contains("Test")).filter(_.isFile).toList
+      if (lof.isEmpty){
+        val newFile = new File(s"${dir}/Test.scala")
+        List[File](newFile)
+      }
+      else{
+        lof
+      }
     } else {
-      List[File]()
+      val newFile = new File(s"${dir}/Test.scala")
+      val bw = new BufferedWriter(new FileWriter(newFile))
+      bw.write(
+        """
+          |package com.zenaptix.dsl.cobolClasses
+          |class Test
+        """.stripMargin)
+      bw.close()
+      List[File](newFile)
     }
   }
   def getFileTypeNames(dir:String = "/home/rikus/Documents/ZenAptix/copybookStreams/core/src/main/scala/com/zenaptix/dsl/cobolClasses",namespace:String = "com.zenaptix.dsl.cobolClasses" ) = {
@@ -34,12 +50,8 @@ class CopyBookMacro extends scala.annotation.StaticAnnotation {
         val namesToValues: Seq[Term.Tuple] = paramss.flatten.map({ param =>
           q"(${Term.fresh(param.name.syntax)}, ${Term.Name(param.name.value)})"
         })
-//        val typesList = List("com.zenaptix.dsl.cobolClasses.Mbsk861", "com.zenaptix.dsl.cobolClasses.Mbsk862")
         val typesList = CopyBookMacro.getFileTypeNames()
-
         val toSchemaTypeImpl =
-        //          q"com.sksamuel.avro4s.AvroSchema[com.zenaptix.dsl.cobolClasses.Mbsk861]"
-        //          q"com.sksamuel.avro4s.AvroSchema[${typesList.head.parse[Type].get}]"
           q"List(com.sksamuel.avro4s.AvroSchema[${typesList.head.parse[Type].get}])"
         val listOfTypes = typesList.map(tpe => {
           q"com.sksamuel.avro4s.AvroSchema[${tpe.parse[Type].get}]"

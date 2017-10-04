@@ -942,8 +942,11 @@ object Files extends LazyLogging{
           }
           case _ => { //bin
             //            val bts = wordAlign(bits, digitBitSize, align.getOrElse(Left))
+            logger.info("bts : " + bits.toBin)
+            logger.info("codec : " + codec)
             val buf = ByteBuffer.allocate(8)
             val decValue = Codec.decode(bits)(codec).require.value.asInstanceOf[Number].doubleValue()
+            logger.info("decValue : " + decValue)
             val byteArr = buf.putDouble(decValue).array()
             byteArr
           }
@@ -1176,6 +1179,7 @@ object Files extends LazyLogging{
                 val codec = i.enc.getOrElse(EBCDIC()).codec(i.compact, i.scale, i.signPosition)
                 logger.info("IntCodec : " + codec)
                 val bitCount = getBitCount(codec, i.compact, i.scale)
+                logger.info("bitCount : " + bitCount)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
                 val padded: Array[Byte] = decode(codec, i.enc.getOrElse(EBCDIC()), i.scale, bits, i.compact, i.wordAlligned, i.signPosition)
                 val ans = charDecode(padded, i.enc, i.compact)
