@@ -28,4 +28,7 @@ val buf = ByteBuffer.allocate(8)
 int16.toString
 val decValue = Codec.decode(bits)(int16).require.value.asInstanceOf[Number].doubleValue()
 val byteArr = buf.putDouble(decValue).array()
+val buf2 = ByteBuffer.wrap(byteArr)
+
+buf2.getDouble.toString
 

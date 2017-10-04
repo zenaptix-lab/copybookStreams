@@ -948,6 +948,7 @@ object Files extends LazyLogging{
             val decValue = Codec.decode(bits)(codec).require.value.asInstanceOf[Number].doubleValue()
             logger.info("decValue : " + decValue)
             val byteArr = buf.putDouble(decValue).array()
+            logger.info("byteArr : " + byteArr)
             byteArr
           }
         }
@@ -994,7 +995,7 @@ object Files extends LazyLogging{
               }
               case _ => { //bin
                 val buf = ByteBuffer.wrap(byteArr)
-                buf.flip()
+//                buf.flip()
                 buf.getDouble.toString //returns number value as a string "1500"
                 //                buf.clear()
               }
@@ -1109,6 +1110,7 @@ object Files extends LazyLogging{
             logger.info("ERROR : " + e)
             logger.info("else origRec.getSchema.getName " + origRec.getSchema.getName)
             logger.info("Put " + fieldName + " IN " + origRec.getSchema.getName)
+            logger.info("values : " + values.toList)
             val fieldVal = values.next() match {
               case h :: HNil => h
               case _ => println("&&&!!!!!")
@@ -1182,6 +1184,7 @@ object Files extends LazyLogging{
                 logger.info("bitCount : " + bitCount)
                 val bits = f.slice(fileIdx, fileIdx + bitCount)
                 val padded: Array[Byte] = decode(codec, i.enc.getOrElse(EBCDIC()), i.scale, bits, i.compact, i.wordAlligned, i.signPosition)
+                logger.info("padded:Array[Byte] : " + padded)
                 val ans = charDecode(padded, i.enc, i.compact)
                 fileIdx = fileIdx + bitCount.toInt
                 ans.toDouble :: HNil

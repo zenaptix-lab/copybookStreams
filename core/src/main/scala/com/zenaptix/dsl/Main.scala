@@ -67,13 +67,13 @@ object Main extends App with LazyLogging {
           }
           else {
             while (counter < conf.getInt("copybook.numRecords")) {
-              logger.error(Console.RED + s"counter : $counter")
+              logger.error(Console.RED + s"counter : $counter" + Console.WHITE)
               val genRecValues = Files.rawDataList(conf.getInt("copybook.recOffset"), bytes, sc, forest)
               val genRecVal: List[HList] = genRecValues.head._1.filter(hlst => hlst match {
                 case head :: HNil => true
                 case _ => false
               })
-
+              logger.info("genRecordVal : " + genRecVal)
               val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
               println(Console.YELLOW + finalRec.toString + Console.WHITE)
               bytes = bytes.drop(genRecValues.head._2)
