@@ -1045,7 +1045,7 @@ object Files extends LazyLogging {
                 case -9 => "7"
                 case -8 => "8"
                 case -7 => "9"
-                case _ => "&"
+                case _ => " "
               }
               cobolChar
             }

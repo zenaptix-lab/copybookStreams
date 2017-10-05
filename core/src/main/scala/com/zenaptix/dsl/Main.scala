@@ -28,7 +28,6 @@ object Main extends App with LazyLogging {
     println(Console.RED + "please give input args" + Console.WHITE)
   }
   else {
-    //    val source: BufferedSource = Source.fromFile("/home/rikus/Downloads/mainframe_test/CQSF602.txt")
     val source = Source.fromFile(args(0).toString)
     val lines: String = try source.getLines().mkString("\n") finally source.close()
     val forest = CopyBookSchema(lines).parseTree(EBCDIC())
@@ -41,47 +40,31 @@ object Main extends App with LazyLogging {
       }
 
       case "-R" =>
-        var bytes: BitVector = Files.copyBytes("/home/rikus/Downloads/mainframe_test/paymentHistory/VEPSS.SLIVE.GSAM.DK86A0.SEP19")
+        var bytes: BitVector = Files.copyBytes(args(2))
         logger.info("bytes : " + bytes.slice(0, 100).toBin)
         logger.error("schemas : " + schemas.schema.length)
-        //        val schema = schemas.schema.head
-        //        while (counter < conf.getInt("copybook.numRecords")) {
-        var counter = 0
-        val schema = schemas.schema
-        schema.foreach(sc => {
-          logger.error(Console.RED + s"schema : ${sc.toString(true)} " + Console.WHITE)
-          val origRec = new GenericData.Record(sc)
-
-          //          if (conf.getInt("copybook.numRecords") <= 0) {
-          //            while (bytes.size > 0) {
-          //              val genRecValues = Files.rawDataList(conf.getInt("copybook.recOffset"), bytes, sc, forest(counter))
-          //              val genRecVal: List[HList] = genRecValues._1.filter(hlst => hlst match {
-          //                case head :: HNil => true
-          //                case _ => false
-          //              })
-          //
-          //              val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
-          //              println(Console.YELLOW + finalRec.toString + Console.WHITE)
-          //              bytes = bytes.drop(genRecValues._2)
-          //              writeValues2File(genRecVal, "/home/rikus/Downloads/mainframe_test/valuesTest.csv")
-          //              counter += 1
-          //            }
-          //          }
-
-          logger.error(Console.RED + s"counter : $counter" + Console.WHITE)
-          val genRecValues = Files.rawDataList(conf.getInt("copybook.recOffset"), bytes, sc, forest(counter))
-          val genRecVal: List[HList] = genRecValues._1.filter(hlst => hlst match {
-            case head :: HNil => true
-            case _ => false
+        var recordCounter = 0
+        while (recordCounter < conf.getInt("copybook.numRecords")) {
+          var counter = 0
+          val schema = schemas.schema //schema function injected with macro
+          schema.foreach(sc => {
+            logger.error(Console.RED + s"schema : ${sc.toString(true)} " + Console.WHITE)
+            val origRec = new GenericData.Record(sc)
+            logger.error(Console.RED + s"counter : $counter" + Console.WHITE)
+            val genRecValues = Files.rawDataList(args(3).toInt, bytes, sc, forest(counter))
+            val genRecVal: List[HList] = genRecValues._1.filter(hlst => hlst match {
+              case head :: HNil => true
+              case _ => false
+            })
+            logger.info("genRecordVal : " + genRecVal)
+            val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
+            println(Console.YELLOW + finalRec.toString + Console.WHITE)
+            bytes = bytes.drop(genRecValues._2)
+            writeValues2File(genRecVal, args(4))
+            counter += 1
           })
-          logger.info("genRecordVal : " + genRecVal)
-          logger.info("genRecordVal : " + genRecVal.toIterator.toList)
-          val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
-          println(Console.YELLOW + finalRec.toString + Console.WHITE)
-          bytes = bytes.drop(genRecValues._2)
-          writeValues2File(genRecVal, "/home/rikus/Downloads/mainframe_test/valuesTest.csv")
-          counter += 1
-        })
+          recordCounter += 1
+        }
     }
   }
 }
