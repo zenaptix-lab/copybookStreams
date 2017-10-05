@@ -169,7 +169,7 @@ case class AlphaNumeric(
   *
   * @param cpyBook
   */
-case class CopyBookSchema(cpyBook: String) extends LazyLogging{
+case class CopyBookSchema(cpyBook: String) extends LazyLogging {
   val matcher: Regex = "\\(([^)]+)\\)".r
 
   /**
@@ -822,7 +822,7 @@ case class ParseSuccess[T](result: T, remainder: BitVector) extends ParseResult[
 
 case class ParseError[T](result: T, remainder: BitVector) extends ParseResult[Nothing]
 
-object Files extends LazyLogging{
+object Files extends LazyLogging {
   /**
     *
     * @param dir : Files directory
@@ -995,7 +995,7 @@ object Files extends LazyLogging{
               }
               case _ => { //bin
                 val buf = ByteBuffer.wrap(byteArr)
-//                buf.flip()
+                //                buf.flip()
                 buf.getDouble.toString //returns number value as a string "1500"
                 //                buf.clear()
               }
@@ -1045,7 +1045,7 @@ object Files extends LazyLogging{
                 case -9 => "7"
                 case -8 => "8"
                 case -7 => "9"
-                case _ => " "
+                case _ => "&"
               }
               cobolChar
             }
@@ -1110,8 +1110,8 @@ object Files extends LazyLogging{
             logger.info("ERROR : " + e)
             logger.info("else origRec.getSchema.getName " + origRec.getSchema.getName)
             logger.info("Put " + fieldName + " IN " + origRec.getSchema.getName)
-//            logger.info("values : " + values.toList)
-//            logger.info("values.size : " + values.size)
+            //            logger.info("values : " + values.toList)
+            //            logger.info("values.size : " + values.size)
             val fieldVal = values.next() match {
               case h :: HNil => h
               case _ => println("&&&!!!!!")
@@ -1148,58 +1148,60 @@ object Files extends LazyLogging{
     }
   }
 
-  def rawDataList(fileOffset: Long, f: BitVector, schema: Schema, forest: Seq[Group]): Seq[(List[HList], Long)] = {
-    logger.info("forest : " + forest.toList)
-    forest.map(tree => {
-      val roots: Seq[CBTree] = tree.traverseAll
-      var fileIdx = fileOffset
-      (roots.map(root => {
-        root match {
-          case y: Statement => {
-            y.dataType match {
-              case a: AlphaNumeric => {
-                //each character is represented by a byte
-                val codec = a.enc.getOrElse(EBCDIC()).codec(None, a.length, None)
-                logger.info("AlphaCodec : " + codec)
-                val bitCount = getBitCount(codec, None, a.length) //count of entire word
-                val bits = f.slice(fileIdx, fileIdx + bitCount) // cut out word form binary file
-                val padded: Array[Byte] = decode(codec, a.enc.getOrElse(EBCDIC()), a.length, bits, None, a.wordAlligned, None)
-                val ans = charDecode(padded, a.enc, None)
-                fileIdx = fileIdx + bitCount.toInt
-                ans :: HNil
-              }
-              case d: Decimal => {
-                val codec = d.enc.getOrElse(EBCDIC()).codec(d.compact, d.scale, d.signPosition)
-                logger.info("DecCodec : " + codec)
-                val bitCount = getBitCount(codec, d.compact, d.scale)
-                val bits = f.slice(fileIdx, fileIdx + bitCount)
-                val padded: Array[Byte] = decode(codec, d.enc.getOrElse(EBCDIC()), d.scale, bits, d.compact, d.wordAlligned, d.signPosition)
-                val ans = charDecode(padded, d.enc, d.compact)
-                fileIdx = fileIdx + bitCount.toInt
-                //                println("value : " + ans.mkString("-"))
-                ans.toFloat :: HNil
-              }
-              case i: Integer => {
-                val codec = i.enc.getOrElse(EBCDIC()).codec(i.compact, i.scale, i.signPosition)
-                logger.info("IntCodec : " + codec)
-                val bitCount = getBitCount(codec, i.compact, i.scale)
-                logger.info("bitCount : " + bitCount)
-                val bits = f.slice(fileIdx, fileIdx + bitCount)
-                val padded: Array[Byte] = decode(codec, i.enc.getOrElse(EBCDIC()), i.scale, bits, i.compact, i.wordAlligned, i.signPosition)
-                logger.info("padded:Array[Byte] : " + padded)
-                val ans = charDecode(padded, i.enc, i.compact)
-                fileIdx = fileIdx + bitCount.toInt
-                ans.toDouble :: HNil
-              }
+  def rawDataList(fileOffset: Long, f: BitVector, schema: Schema, tree: Group): (List[HList], Long) = {
+    logger.info("tree : " + tree.camelCaseVar)
+    val roots: Seq[CBTree] = tree.traverseAll
+    var fileIdx = fileOffset
+    (roots.map(root => {
+      root match {
+        case y: Statement => {
+          y.dataType match {
+            case a: AlphaNumeric => {
+              //each character is represented by a byte
+              val codec = a.enc.getOrElse(EBCDIC()).codec(None, a.length, None)
+              logger.info("AlphaCodec : " + codec)
+              val bitCount = getBitCount(codec, None, a.length) //count of entire word
+              val bits = f.slice(fileIdx, fileIdx + bitCount) // cut out word form binary file
+              val padded: Array[Byte] = decode(codec, a.enc.getOrElse(EBCDIC()), a.length, bits, None, a.wordAlligned, None)
+              val ans = charDecode(padded, a.enc, None)
+              fileIdx = fileIdx + bitCount.toInt
+              ans :: HNil
+            }
+            case d: Decimal => {
+              val codec = d.enc.getOrElse(EBCDIC()).codec(d.compact, d.scale, d.signPosition)
+              logger.info("DecCodec : " + codec)
+              val bitCount = getBitCount(codec, d.compact, d.scale)
+              val bits = f.slice(fileIdx, fileIdx + bitCount)
+              val padded: Array[Byte] = decode(codec, d.enc.getOrElse(EBCDIC()), d.scale, bits, d.compact, d.wordAlligned, d.signPosition)
+              val ans = charDecode(padded, d.enc, d.compact)
+              fileIdx = fileIdx + bitCount.toInt
+              //              ans.toFloat :: HNil
+              convertCharacter[Float](ans) :: HNil
+            }
+            case i: Integer => {
+              val codec = i.enc.getOrElse(EBCDIC()).codec(i.compact, i.scale, i.signPosition)
+              logger.info("IntCodec : " + codec)
+              val bitCount = getBitCount(codec, i.compact, i.scale)
+              logger.info("bitCount : " + bitCount)
+              val bits = f.slice(fileIdx, fileIdx + bitCount)
+              val padded: Array[Byte] = decode(codec, i.enc.getOrElse(EBCDIC()), i.scale, bits, i.compact, i.wordAlligned, i.signPosition)
+              logger.info("padded:Array[Byte] : " + padded)
+              logger.info("i.enc : " + i.enc)
+              logger.info("i.comp : " + i.compact)
+              val ans = charDecode(padded, i.enc, i.compact)
+              fileIdx = fileIdx + bitCount.toInt
+              logger.info("ans : " + ans)
+              //              ans.toDouble :: HNil
+              convertCharacter[Double](ans) :: HNil
             }
           }
-          case _ => {
-            logger.info("group")
-            HNil
-          }
         }
-      }).toList, fileIdx)
-    })
+        case _ => {
+          logger.info("group")
+          HNil
+        }
+      }
+    }).toList, fileIdx)
   }
 
   def writeValues2File(values: List[HList], fileName: String): Unit = {
@@ -1226,5 +1228,17 @@ object Files extends LazyLogging{
     })
     //    out.append(mapstring)
     out.close
+  }
+
+  def convertCharacter[T](ans: String) = {
+    Try {
+      ans.asInstanceOf[T]
+    } match {
+      case Success(value) => value
+      case Failure(e) => {
+        throw new Exception(e)
+        0
+      }
+    }
   }
 }
