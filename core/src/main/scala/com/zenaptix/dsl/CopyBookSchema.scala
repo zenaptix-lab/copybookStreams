@@ -1110,7 +1110,8 @@ object Files extends LazyLogging{
             logger.info("ERROR : " + e)
             logger.info("else origRec.getSchema.getName " + origRec.getSchema.getName)
             logger.info("Put " + fieldName + " IN " + origRec.getSchema.getName)
-            logger.info("values : " + values.toList)
+//            logger.info("values : " + values.toList)
+//            logger.info("values.size : " + values.size)
             val fieldVal = values.next() match {
               case h :: HNil => h
               case _ => println("&&&!!!!!")
@@ -1148,6 +1149,7 @@ object Files extends LazyLogging{
   }
 
   def rawDataList(fileOffset: Long, f: BitVector, schema: Schema, forest: Seq[Group]): Seq[(List[HList], Long)] = {
+    logger.info("forest : " + forest.toList)
     forest.map(tree => {
       val roots: Seq[CBTree] = tree.traverseAll
       var fileIdx = fileOffset

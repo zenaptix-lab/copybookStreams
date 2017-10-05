@@ -74,6 +74,7 @@ object Main extends App with LazyLogging {
                 case _ => false
               })
               logger.info("genRecordVal : " + genRecVal)
+              logger.info("genRecordVal : " + genRecVal.toIterator.toList)
               val finalRec: GenericData.Record = recursiveBuilder(roots.head, roots, origRec, genRecVal.toIterator)
               println(Console.YELLOW + finalRec.toString + Console.WHITE)
               bytes = bytes.drop(genRecValues.head._2)
