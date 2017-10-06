@@ -14,8 +14,17 @@ https://drive.google.com/a/zenaptix.com/file/d/0B5KPFloE62GlQWI4SjNRQlFXWUU/view
 
 
 ## Build project
-```$ sbt clean compile ```
+```$ sbt <project> clean compile ```
+###
+```<project> = cobolCopyBook/macros```
 
-## Run tests
-```$ sbt test ```
+## Run main app
+```$sbt project cobolCopybook```
+```$sbt clean compile```
 
+### Create .scala types from cobolCopybook
+```$sbt run "/home/rikus/Downloads/mainframe_test/CQSF602.txt" -C ```
+
+### Run app
+```$sbt clean compile```
+```$sbt run "/home/rikus/Downloads/mainframe_test/CQSF602.txt" -R "/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07" 32 "/home/rikus/Downloads/test.csv"```
