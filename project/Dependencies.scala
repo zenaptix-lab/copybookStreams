@@ -20,6 +20,7 @@ object Dependencies {
     "com.chuusai" %% "shapeless" % "2.3.2",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
-    "org.scalameta" %% "scalameta" % "1.8.0"
+    "org.scalameta" %% "scalameta" % "1.8.0",
+    "org.stanch" %% "reftree" % "1.2.0"
   )
 }

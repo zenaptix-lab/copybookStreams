@@ -26,6 +26,3 @@ lazy val cobolCopyBook = (project in file("core")).
   ).
   dependsOn(macros).
   enablePlugins(JavaAppPackaging)
-
-
-        

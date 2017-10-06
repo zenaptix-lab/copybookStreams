@@ -23,7 +23,10 @@ object Settings {
     resolvers ++= Seq(
       "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
       "Local Ivy Repository" at "file://" + Path.userHome.absolutePath + "/.ivy2/local",
-      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+      Resolver.bintrayRepo("stanch", "maven"),
+      Resolver.jcenterRepo,
+      Resolver.url("bintry",url("https://dl.bintray.com/stanch/maven"))
     )
   )
 

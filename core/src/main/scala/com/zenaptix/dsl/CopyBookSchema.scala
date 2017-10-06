@@ -2,6 +2,7 @@ package com.zenaptix.dsl
 
 import java.io.{File, FileInputStream, FileOutputStream, IOException}
 import java.nio.ByteBuffer
+import java.nio.file.Paths
 
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
@@ -15,6 +16,7 @@ import scodec.bits._
 import codecs._
 import com.sksamuel.avro4s.AvroSchema
 import com.typesafe.scalalogging.LazyLogging
+import reftree.render.{Renderer, RenderingOptions}
 import shapeless._
 import syntax.std.traversable._
 
@@ -1240,5 +1242,12 @@ object Files extends LazyLogging {
         0
       }
     }
+  }
+
+  def renderer(dir: String) = {
+    Renderer(
+      renderingOptions = RenderingOptions(density = 75),
+      directory = Paths.get(dir)
+    )
   }
 }
