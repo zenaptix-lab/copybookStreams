@@ -19,6 +19,8 @@ object Dependencies {
     "com.gensler" % "scalavro_2.10" % "0.6.2",
     "com.chuusai" %% "shapeless" % "2.3.2",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2",
-    "ch.qos.logback" % "logback-classic" % "1.2.3"
+    "ch.qos.logback" % "logback-classic" % "1.2.3",
+    "org.scalameta" %% "scalameta" % "1.8.0",
+    "org.stanch" %% "reftree" % "1.2.0"
   )
 }

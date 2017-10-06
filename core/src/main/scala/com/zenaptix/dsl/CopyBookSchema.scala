@@ -2,6 +2,7 @@ package com.zenaptix.dsl
 
 import java.io.{File, FileInputStream, FileOutputStream, IOException}
 import java.nio.ByteBuffer
+import java.nio.file.Paths
 
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
@@ -15,6 +16,7 @@ import scodec.bits._
 import codecs._
 import com.sksamuel.avro4s.AvroSchema
 import com.typesafe.scalalogging.LazyLogging
+import reftree.render.{Renderer, RenderingOptions}
 import shapeless._
 import syntax.std.traversable._
 
@@ -169,7 +171,7 @@ case class AlphaNumeric(
   *
   * @param cpyBook
   */
-case class CopyBookSchema(cpyBook: String) extends LazyLogging{
+case class CopyBookSchema(cpyBook: String) extends LazyLogging {
   val matcher: Regex = "\\(([^)]+)\\)".r
 
   /**
@@ -822,7 +824,7 @@ case class ParseSuccess[T](result: T, remainder: BitVector) extends ParseResult[
 
 case class ParseError[T](result: T, remainder: BitVector) extends ParseResult[Nothing]
 
-object Files extends LazyLogging{
+object Files extends LazyLogging {
   /**
     *
     * @param dir : Files directory
@@ -837,7 +839,8 @@ object Files extends LazyLogging{
     }
   }
 
-  def createCaseClasses(roots: Seq[Group], packageName: String = "com.zenaptix.test") = {
+  def createCaseClasses(roots: Seq[Group], packageName: String = "com.zenaptix.dsl.cobolClasses") = {
+    val headRootName = roots.head.camelCaseVar
     roots.foreach { root =>
       logger.info(s"Creating case classes for root : ${root.name}")
       val c = root.traverseGroups.map(g => {
@@ -846,11 +849,12 @@ object Files extends LazyLogging{
         logger.info("g.asCaseClass" + g.asCaseClass)
         g.asCaseClass
       })
-      root.printToFile(new File(s"src/main/scala/${packageName.replace(".", "/")}/${root.camelCased}.scala")) { p =>
+      root.printToFile(new File(s"core/src/main/scala/${packageName.replace(".", "/")}/${root.camelCased}.scala")) { p =>
         p.println(s"package $packageName")
         c.foreach(p.println)
       }
     }
+    headRootName
   }
 
   def copyBytes(fileName: String): BitVector = {
@@ -940,11 +944,14 @@ object Files extends LazyLogging{
           }
           case _ => { //bin
             //            val bts = wordAlign(bits, digitBitSize, align.getOrElse(Left))
+            logger.info("bts : " + bits.toBin)
+            logger.info("codec : " + codec)
             val buf = ByteBuffer.allocate(8)
             logger.info("codec : " + codec.toString)
             val decValue = Codec.decode(bits)(codec).require.value.asInstanceOf[Number].doubleValue()
-            logger.info("decValue : " + decValue )
+            logger.info("decValue : " + decValue)
             val byteArr = buf.putDouble(decValue).array()
+            logger.info("byteArr : " + byteArr)
             byteArr
           }
         }
@@ -991,6 +998,7 @@ object Files extends LazyLogging{
               }
               case _ => { //bin
                 val buf = ByteBuffer.wrap(byteArr)
+                //                buf.flip()
                 buf.getDouble.toString //returns number value as a string "1500"
                 //                buf.clear()
               }
@@ -1106,6 +1114,8 @@ object Files extends LazyLogging{
             logger.info("ERROR : " + e)
             logger.info("else origRec.getSchema.getName " + origRec.getSchema.getName)
             logger.info("Put " + fieldName + " IN " + origRec.getSchema.getName)
+            //            logger.info("values : " + values.toList)
+            //            logger.info("values.size : " + values.size)
             val fieldVal = values.next() match {
               case h :: HNil => h
               case _ => println("&&&!!!!!")
@@ -1143,8 +1153,7 @@ object Files extends LazyLogging{
   }
 
   def rawDataList(fileOffset: Long, f: BitVector, schema: Schema, tree: Group): (List[HList], Long) = {
-    //    println(Console.RED + "forest : " + forest.toList + Console.WHITE)
-    println(Console.RED + "tree : " + tree + Console.WHITE)
+    logger.info("tree : " + tree.camelCaseVar)
     val roots: Seq[CBTree] = tree.traverseAll
     var fileIdx = fileOffset
     (roots.map(root => {
@@ -1170,19 +1179,24 @@ object Files extends LazyLogging{
               val padded: Array[Byte] = decode(codec, d.enc.getOrElse(EBCDIC()), d.scale, bits, d.compact, d.wordAlligned, d.signPosition)
               val ans = charDecode(padded, d.enc, d.compact)
               fileIdx = fileIdx + bitCount.toInt
-              //                println("value : " + ans.mkString("-"))
-              ans.toFloat :: HNil
+              //              ans.toFloat :: HNil
+              convertCharacter[Float](ans) :: HNil
             }
             case i: Integer => {
               val codec = i.enc.getOrElse(EBCDIC()).codec(i.compact, i.scale, i.signPosition)
               logger.info("IntCodec : " + codec)
-              logger.info("root : " + root.camelCaseVar)
               val bitCount = getBitCount(codec, i.compact, i.scale)
+              logger.info("bitCount : " + bitCount)
               val bits = f.slice(fileIdx, fileIdx + bitCount)
               val padded: Array[Byte] = decode(codec, i.enc.getOrElse(EBCDIC()), i.scale, bits, i.compact, i.wordAlligned, i.signPosition)
+              logger.info("padded:Array[Byte] : " + padded)
+              logger.info("i.enc : " + i.enc)
+              logger.info("i.comp : " + i.compact)
               val ans = charDecode(padded, i.enc, i.compact)
               fileIdx = fileIdx + bitCount.toInt
-              ans.toDouble :: HNil
+              logger.info("ans : " + ans)
+              //              ans.toDouble :: HNil
+              convertCharacter[Double](ans) :: HNil
             }
           }
         }
@@ -1218,5 +1232,24 @@ object Files extends LazyLogging{
     })
     //    out.append(mapstring)
     out.close
+  }
+
+  def convertCharacter[T](ans: String) = {
+    Try {
+      ans.asInstanceOf[T]
+    } match {
+      case Success(value) => value
+      case Failure(e) => {
+        throw new Exception(e)
+        0
+      }
+    }
+  }
+
+  def renderer(dir: String) = {
+    Renderer(
+      renderingOptions = RenderingOptions(density = 75),
+      directory = Paths.get(dir)
+    )
   }
 }
