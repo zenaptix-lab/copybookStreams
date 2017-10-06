@@ -11,7 +11,9 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import com.zenaptix.macros._
 import org.apache.avro.Schema
-
+import reftree.render.{Renderer, RenderingOptions}
+import reftree.diagram.Diagram
+import java.nio.file.Paths
 /**
   * Created by rikus on 9/15/17.
   */
@@ -24,6 +26,9 @@ case class Schemas(source: BufferedSource, lines: String, forest: Seq[Group], ro
 
 object Main extends App with LazyLogging {
   val conf = ConfigFactory.load()
+  val rendr = renderer("/home/rikus/Desktop")
+  import rendr._
+
   if (args.length == 0) {
     println(Console.RED + "please give input args" + Console.WHITE)
   }
@@ -31,6 +36,9 @@ object Main extends App with LazyLogging {
     val source = Source.fromFile(args(0).toString)
     val lines: String = try source.getLines().mkString("\n") finally source.close()
     val forest = CopyBookSchema(lines).parseTree(EBCDIC())
+
+    Diagram.sourceCodeCaption(forest).render("testViz")
+
     val roots = forest.head.traverseAll
     val schemas = Schemas(source, lines, forest, roots)
 
