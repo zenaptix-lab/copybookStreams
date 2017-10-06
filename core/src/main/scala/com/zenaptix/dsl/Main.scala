@@ -22,10 +22,27 @@ case class Schemas(source: BufferedSource, lines: String, forest: Seq[Group], ro
   //  def schema: Schema = AvroSchema[String] //todo: inject type from macro
 }
 
+/**
+  * Main of app
+  *
+  * @args (0) name of cobol text file
+  * @args (1) create [-C] or run [-R] flag
+  * @args (2) name of binary file
+  * @args (3) bit offset in number of bits between records
+  * @args (4) name of .csv file to create with decoded results.
+  * @args (5) number of records to decode
+  */
 object Main extends App with LazyLogging {
   val conf = ConfigFactory.load()
   if (args.length == 0) {
-    println(Console.RED + "please give input args" + Console.WHITE)
+    println(Console.RED + "Please give input args" + Console.WHITE)
+    println(Console.GREEN +
+      """@args(0) name of cobol text file
+        |  @args(1) create [-C] or run [-R] flag
+        |  @args(2) name of binary file
+        |  @args(3) bit offset in number of bits between records
+        |  @args(4) name of .csv file to create with decoded results.
+        |  @args(5) number of records to decode""".stripMargin + Console.WHITE)
   }
   else {
     val source = Source.fromFile(args(0).toString)
@@ -44,7 +61,7 @@ object Main extends App with LazyLogging {
         logger.info("bytes : " + bytes.slice(0, 100).toBin)
         logger.error("schemas : " + schemas.schema.length)
         var recordCounter = 0
-        while (recordCounter < conf.getInt("copybook.numRecords")) {
+        while (recordCounter < args(5).toInt) {
           var counter = 0
           val schema = schemas.schema //schema function injected with macro
           schema.foreach(sc => {

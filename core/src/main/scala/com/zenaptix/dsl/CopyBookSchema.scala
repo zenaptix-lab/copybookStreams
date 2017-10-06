@@ -57,7 +57,10 @@ sealed trait Encoding {
 }
 
 /**
+  * ASCII()
+  * Encoding type abstraction
   *
+  * @Return : scodec [Codec] type that is used for encoding/decoding bit vectors to numbers and visa versa.
   */
 case class ASCII() extends Encoding {
   def codec(comp: Option[Int], scale: Int, signPosition: Option[Position]): Codec[_ <: AnyVal] = {
@@ -89,7 +92,9 @@ case class ASCII() extends Encoding {
 }
 
 /**
+  * EBCDIC() type abstraction
   *
+  * @Return : scodec [Codec] type that is used for encoding/decoding bit vectors to numbers and visa versa.
   */
 case class EBCDIC() extends Encoding {
   def codec(comp: Option[Int], scale: Int, signPosition: Option[Position]): Codec[_ <: AnyVal] = {
@@ -120,8 +125,8 @@ case class EBCDIC() extends Encoding {
   }
 }
 
-/**
-  *
+/** Decimal
+  * A decimal number abstraction
   * @param scale
   * @param precision
   * @param signPosition
@@ -138,8 +143,8 @@ case class Decimal(
                   )
   extends CobolType
 
-/**
-  *
+/** Integer
+  * An integer number abstraction
   * @param scale
   * @param signPosition
   * @param wordAlligned
@@ -154,8 +159,8 @@ case class Integer(
                   )
   extends CobolType
 
-/**
-  *
+/** AlphaNumeric
+  * String abstraction
   * @param length
   * @param wordAlligned
   */
@@ -167,16 +172,17 @@ case class AlphaNumeric(
                        )
   extends CobolType
 
-/**
+/** CopyBookSchema
   *
-  * @param cpyBook
+  * @constructor cpyBook:String
+  * @param cpyBook String representation of the cobol copybook
   */
 case class CopyBookSchema(cpyBook: String) extends LazyLogging {
   val matcher: Regex = "\\(([^)]+)\\)".r
 
-  /**
-    *
-    * @return
+  /** tokenizes cobol copybook and converts tokens to scala data structures.
+    * @param enc:Encoding ASCII/EBCDIC
+    * @return Seq[Group] where a group is potentially a nested scala type.
     */
   def parseTree(enc: Encoding): Seq[Group] = {
     val tokens: Array[Array[String]] = tokenize()
@@ -304,8 +310,7 @@ case class CopyBookSchema(cpyBook: String) extends LazyLogging {
   }
 
   /**
-    *
-    * @return
+    * tokenizes copybook to lift the relevant information
     */
   def tokenize(): Array[Array[String]] = {
     val doc = cpyBook
@@ -364,7 +369,7 @@ case class CopyBookSchema(cpyBook: String) extends LazyLogging {
     else None
   }
 
-  /**
+  /** get the type and length from a cobol data structure.
     *
     * @param keywords
     * @param modifiers
@@ -440,7 +445,7 @@ case class CopyBookSchema(cpyBook: String) extends LazyLogging {
   }
 }
 
-/**
+/** Bottom type for cobol copybook AST
   *
   */
 sealed trait CBTree {
@@ -553,7 +558,7 @@ sealed trait CBTree {
 
 }
 
-/**
+/** An abstraction of the leaves in the cobol copybook
   *
   * @param level
   * @param name
@@ -611,7 +616,7 @@ case class Statement(
   }
 }
 
-/**
+/** An abstraction for the non-leaves in the cobol copybook
   *
   * @param level
   * @param name
@@ -632,9 +637,8 @@ case class Group(
                 )
   extends CBTree {
 
-  /**
-    *
-    * @return
+  /** write as a scala case class
+    * @return String that represents the scala case class
     */
   def asCaseClass: String = {
     mutable.StringBuilder.newBuilder
@@ -675,8 +679,7 @@ case class Group(
     }
   }
 
-  /**
-    *
+  /** traverse through all the leaves i.e. statements in a cobol copybook AST
     * @return
     */
   def traverseStatements: Seq[Statement] = {
@@ -693,7 +696,7 @@ case class Group(
     dfs(this)
   }
 
-  /**
+  /** traverse through all the non-leaves in a cobol copybook AST
     *
     * @return
     */
@@ -724,7 +727,7 @@ case class Group(
     }
   }
 
-  /**
+  /** traverse through the entire cobol copybook AST
     *
     * @return
     */
@@ -778,7 +781,7 @@ case class Group(
     ("", Nil)
   }
 
-  /**
+  /** used to add CBTree to another CBTree
     *
     * @param tree
     * @tparam T
@@ -839,6 +842,12 @@ object Files extends LazyLogging {
     }
   }
 
+  /** create scala case classes and write to file
+    *
+    * @param roots of the copybook AST
+    * @param packageName
+    * @return
+    */
   def createCaseClasses(roots: Seq[Group], packageName: String = "com.zenaptix.dsl.cobolClasses") = {
     val headRootName = roots.head.camelCaseVar
     roots.foreach { root =>
@@ -869,14 +878,12 @@ object Files extends LazyLogging {
         c = in.get.read()
         c != -1
       }) {
-        //      println(c)
         vec = vec ++ BitVector(c.toByte)
       }
     } catch {
       case e: IOException => BitVector.empty
     } finally {
       if (in.isDefined) in.get.close
-      //    if (out.isDefined) out.get.close
     }
     vec
   }
@@ -890,6 +897,13 @@ object Files extends LazyLogging {
     }
   }
 
+  /** get the bit count of a cobol data type
+    *
+    * @param codec
+    * @param comp
+    * @param scale
+    * @return
+    */
   def getBitCount(codec: Codec[_ <: AnyVal], comp: Option[Int], scale: Int) = {
     comp match {
       case Some(x) => {
@@ -902,6 +916,17 @@ object Files extends LazyLogging {
     }
   }
 
+  /** decode the bits that are located in a binary file to actual human readable information
+    *
+    * @param codec scodec codec
+    * @param enc encoding type
+    * @param scale size of data stucture
+    * @param bits bits that need to be decoded
+    * @param comp compaction of the bits
+    * @param align bits alignment
+    * @param signPosition sign position of a signed data type
+    * @return
+    */
   def decode(codec: Codec[_ <: AnyVal], enc: Encoding, scale: Int, bits: BitVector, comp: Option[Int], align: Option[Position] = None, signPosition: Option[Position]): Array[Byte] = {
     val digitBitSize = codec.sizeBound.lowerBound.toInt
     val bytes = enc match {
@@ -968,6 +993,13 @@ object Files extends LazyLogging {
     bytes
   }
 
+  /** decode an array of bytes to actual characters that represent their binary counterparts.
+    *
+    * @param byteArr byte array that represents the binary data
+    * @param enc encoding type
+    * @param comp binary compaction type
+    * @return a string representation of the binary data
+    */
   def charDecode(byteArr: Array[Byte], enc: Option[Encoding], comp: Option[Int]) = {
     val ans = enc match {
       case Some(ASCII()) => byteArr.map(byte => {
@@ -998,9 +1030,7 @@ object Files extends LazyLogging {
               }
               case _ => { //bin
                 val buf = ByteBuffer.wrap(byteArr)
-                //                buf.flip()
                 buf.getDouble.toString //returns number value as a string "1500"
-                //                buf.clear()
               }
             }
             compValue
@@ -1088,7 +1118,14 @@ object Files extends LazyLogging {
 
   def cast[A](a: Any, tt: TypeTag[A]): A = a.asInstanceOf[A]
 
-
+  /** used to append data to a generic record in a recursive manner
+    *
+    * @param root current root of the cobol copybook AST
+    * @param roots all the roots of the cobol copybook AST
+    * @param origRec generic record derived from scala type
+    * @param values values that where decoded that are to be added to generic record
+    * @return AVRO generic record with appended data
+    */
   def recursiveBuilder(root: CBTree, roots: Seq[CBTree], origRec: GenericData.Record, values: Iterator[HList]): GenericData.Record = {
     val fields = origRec.getSchema.getFields
     logger.info("FIELDS REC : " + fields)
@@ -1114,8 +1151,6 @@ object Files extends LazyLogging {
             logger.info("ERROR : " + e)
             logger.info("else origRec.getSchema.getName " + origRec.getSchema.getName)
             logger.info("Put " + fieldName + " IN " + origRec.getSchema.getName)
-            //            logger.info("values : " + values.toList)
-            //            logger.info("values.size : " + values.size)
             val fieldVal = values.next() match {
               case h :: HNil => h
               case _ => println("&&&!!!!!")
@@ -1208,6 +1243,11 @@ object Files extends LazyLogging {
     }).toList, fileIdx)
   }
 
+  /**
+    * used to write decoded values from copybook to .csv file
+    * @param values
+    * @param fileName
+    */
   def writeValues2File(values: List[HList], fileName: String): Unit = {
     import java.io.FileOutputStream
     import java.io.PrintWriter
@@ -1230,7 +1270,6 @@ object Files extends LazyLogging {
           out.append(",")
       case _ => ???
     })
-    //    out.append(mapstring)
     out.close
   }
 
