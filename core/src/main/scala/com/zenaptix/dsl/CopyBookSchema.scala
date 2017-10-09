@@ -1291,4 +1291,19 @@ object Files extends LazyLogging {
       directory = Paths.get(dir)
     )
   }
+  def cleanOutDir(dir:String) = {
+    val d = new File(dir)
+    if (d.exists && d.isDirectory) {
+      val lof = d.listFiles.filter(fl => !fl.getName.contains("Test")).filter(_.isFile).toList
+      if(lof.nonEmpty) {
+        lof.foreach(f => {
+          println(Console.RED + "F : " + f + Console.WHITE)
+          f.delete() match {
+            case true => println("delete files from working directory")
+            case false => throw new Exception("Cannot delete old .scala files from working directory")
+          }
+        })
+      }
+    }
+  }
 }

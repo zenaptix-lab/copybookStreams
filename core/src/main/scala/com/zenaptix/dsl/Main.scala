@@ -1,5 +1,7 @@
 package com.zenaptix.dsl
 
+import java.io.{BufferedWriter, File, FileWriter}
+
 import com.sksamuel.avro4s.AvroSchema
 import org.apache.avro.generic.GenericData
 import scodec.bits.BitVector
@@ -18,7 +20,22 @@ import org.apache.avro.Schema
 
 @CopyBookMacro
 case class Schemas(source: BufferedSource, lines: String, forest: Seq[Group], roots: Seq[CBTree], namespace: String = "com.zenaptix.dsl.cobolClasses", cobolTypes: String = "com.sksamuel.avro4s.AvroSchema[com.zenaptix.dsl.cobolClasses.Mbsk861]") {
-  def createSchemas = Files.createCaseClasses(forest, namespace) //todo: create case classes should happen as a macro at compile time to make class availible at runtime
+  def cleanOutDir(dir:String) = {
+      val d = new File(dir)
+      if (d.exists && d.isDirectory) {
+        val lof = d.listFiles.filter(fl => !fl.getName.contains("Test")).filter(_.isFile).toList
+        if(lof.nonEmpty) {
+          lof.foreach(f => {
+            println(Console.RED + "F : " + f + Console.WHITE)
+            f.delete() match {
+              case true => println("delete files from working directory")
+              case false => throw new Exception("Cannot delete old .scala files from working directory")
+            }
+          })
+        }
+      }
+    }
+  def createSchemas = Files.createCaseClasses(forest, namespace)
   //  def schema: Schema = AvroSchema[String] //todo: inject type from macro
 }
 
@@ -53,6 +70,7 @@ object Main extends App with LazyLogging {
 
     args(1).toString match {
       case "-C" => {
+        schemas.cleanOutDir("core/src/main/scala/com/zenaptix/dsl/cobolClasses")
         schemas.createSchemas
       }
 
