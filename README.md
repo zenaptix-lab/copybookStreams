@@ -20,11 +20,13 @@ https://drive.google.com/a/zenaptix.com/file/d/0B5KPFloE62GlQWI4SjNRQlFXWUU/view
 
 ## Run main app
 ```$sbt project cobolCopybook```
+
 ```$sbt clean compile```
 
 ### Create .scala types from cobolCopybook
-```$sbt run "/home/rikus/Downloads/mainframe_test/CQSF602.txt" -C ```
+```$sbt run "<copybook dir>" -C ```
 
 ### Run app
 ```$sbt clean compile```
-```$sbt run "/home/rikus/Downloads/mainframe_test/CQSF602.txt" -R "/home/rikus/Downloads/mainframe_test/PCHEQ.WWORK.IMSP.CQSF602.DATA.AUG07" 32 "/home/rikus/Downloads/test.csv"```
+
+```$sbt run "<copybook dir>" -R "<binary dir>" <bitOffset> "<output .csv dir>"```
