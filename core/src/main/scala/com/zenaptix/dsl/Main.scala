@@ -26,9 +26,8 @@ case class Schemas(source: BufferedSource, lines: String, forest: Seq[Group], ro
         val lof = d.listFiles.filter(fl => !fl.getName.contains("Test")).filter(_.isFile).toList
         if(lof.nonEmpty) {
           lof.foreach(f => {
-            println(Console.RED + "F : " + f + Console.WHITE)
             f.delete() match {
-              case true => println("delete files from working directory")
+              case true => println(s"delete file : ${f}")
               case false => throw new Exception("Cannot delete old .scala files from working directory")
             }
           })

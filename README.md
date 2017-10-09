@@ -29,4 +29,4 @@ https://drive.google.com/a/zenaptix.com/file/d/0B5KPFloE62GlQWI4SjNRQlFXWUU/view
 ### Run app
 ```$sbt clean compile```
 
-```$sbt run "<copybook dir>" -R "<binary dir>" <bitOffset> "<output .csv dir>"```
+```$sbt run "<copybook dir>" -R "<binary dir>" <bitOffset> "<output .csv dir>" <number of records>```
