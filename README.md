@@ -15,6 +15,7 @@ https://drive.google.com/a/zenaptix.com/file/d/0B5KPFloE62GlQWI4SjNRQlFXWUU/view
 
 ## Build project
 ```$ sbt```
+
 ```$ <project> clean compile ```
 ###
 ```<project> = cobolCopyBook/macros```
