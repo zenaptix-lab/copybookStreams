@@ -19,14 +19,14 @@ https://drive.google.com/a/zenaptix.com/file/d/0B5KPFloE62GlQWI4SjNRQlFXWUU/view
 ```<project> = cobolCopyBook/macros```
 
 ## Run main app
-```$sbt project cobolCopybook```
+```$ sbt project cobolCopybook```
 
-```$sbt clean compile```
+```$ sbt clean compile```
 
 ### Create .scala types from cobolCopybook
-```$sbt run "<copybook dir>" -C ```
+```$ sbt run "<copybook dir>" -C ```
 
 ### Run app
-```$sbt clean compile```
+```$ sbt clean compile```
 
-```$sbt run "<copybook dir>" -R "<binary dir>" <bitOffset> "<output .csv dir>" <number of records>```
+```$ sbt run "<copybook dir>" -R "<binary dir>" <bitOffset> "<output .csv dir>" <number of records>```
