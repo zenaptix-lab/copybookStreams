@@ -76,15 +76,15 @@ object Main extends App with LazyLogging {
       case "-R" =>
         var bytes: BitVector = Files.copyBytes(args(2))
         logger.info("bytes : " + bytes.slice(0, 100).toBin)
-        logger.error("schemas : " + schemas.schema.length)
+        logger.info("schemas : " + schemas.schema.length)
         var recordCounter = 0
         while (recordCounter < args(5).toInt) {
           var counter = 0
           val schema = schemas.schema //schema function injected with macro
           schema.foreach(sc => {
-            logger.error(Console.RED + s"schema : ${sc.toString(true)} " + Console.WHITE)
+            logger.info(Console.RED + s"schema : ${sc.toString(true)} " + Console.WHITE)
             val origRec = new GenericData.Record(sc)
-            logger.error(Console.RED + s"counter : $counter" + Console.WHITE)
+            logger.info(Console.RED + s"counter : $counter" + Console.WHITE)
             val genRecValues = Files.rawDataList(args(3).toInt, bytes, sc, forest(counter))
             val genRecVal: List[HList] = genRecValues._1.filter(hlst => hlst match {
               case head :: HNil => true
