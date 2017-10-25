@@ -35,7 +35,7 @@ object CopyBookMacro{
       List[File](newFile)
     }
   }
-  def getFileTypeNames(dir:String = "/home/rikus/Documents/ZenAptix/copybookStreams/core/src/main/scala/com/zenaptix/dsl/cobolClasses",namespace:String = "com.zenaptix.dsl.cobolClasses" ) = {
+  def getFileTypeNames(dir:String = "core/src/main/scala/com/zenaptix/dsl/cobolClasses",namespace:String = "com.zenaptix.dsl.cobolClasses" ) = {
     val files = getListOfFiles(dir)
     val names = files.map(fle => {
       namespace ++ "." ++ fle.getName.split("\\.").head
