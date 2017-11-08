@@ -21,7 +21,7 @@ https://drive.google.com/a/zenaptix.com/file/d/0B5KPFloE62GlQWI4SjNRQlFXWUU/view
 ```<project> = cobolCopyBook/macros```
 
 ## Run main app
-```$ project cobolCopybook```
+```$ project cobolCopyBook```
 
 ```$ clean compile```
 
